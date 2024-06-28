@@ -64,11 +64,31 @@ __global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, fl
     int channel = threadIdx.z;
 
     // Ensure the pixel is inside a valid region of the image.
-    if ((row >= pad && row < (nrow - pad)) && (col >= pad && col < (ncol - pad))) {
+    if ((row < nrow) && (col < ncol)) {
         float result = 0.0f;
 
-        for (int i = 0; i < kernel_size; i++) {
-            for (int j = 0; j < kernel_size; j++) {
+		// Padding
+		int start_row = 0;
+		int start_col = 0;
+		int end_row = kernel_size;
+		int end_col = kernel_size;
+
+		if (row < pad) {
+			start_row = pad - row;
+		}
+		if (col < pad) {
+			start_col = pad - col;
+		}
+		if (row > (nrow - pad - 1)) {
+			end_row = pad + (nrow - row);
+		}
+		if (col > (ncol - pad - 1)) {
+			end_col = pad + (ncol - col);
+		}
+
+		// Convolution
+        for (int i = start_row; i < end_row; i++) {
+            for (int j = start_col; j < end_col; j++) {
                 int img_row = row + i - pad;
                 int img_col = col + j - pad;
                 int img_idx = channel * nrow * ncol + img_row * ncol + img_col;
@@ -112,5 +132,3 @@ __global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, fl
         output_tensor[output_image_idx] = sum;
     }
 }
-
-
