@@ -14,10 +14,10 @@ int main(int argc, char** argv)
 
     // Set the parameters
     int image_size = 6;
-    int num_channels = 3;
+    int num_channels = 4;
     int kernel_size = 3;
     int num_filters = 1;
-    int stride = 1;
+    int stride = 2;
 
     // Read the image and store it in a tensor
     struct tensor img_tensor;
@@ -48,8 +48,8 @@ int main(int argc, char** argv)
     // GPU CONVOLUTION
     // Declare the structure to store the output of the convolution with GPU
     struct tensor output_tensor;
-    output_tensor.col = img_tensor.col;
-    output_tensor.row = img_tensor.row;
+    output_tensor.col = img_tensor.col/stride;
+    output_tensor.row = img_tensor.row/stride;
     output_tensor.depth = num_filters;
     output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
 

@@ -22,16 +22,17 @@ cudaError_t Conv2dWithCuda(struct tensor* input_tensor, struct tensor* kernel, i
 	// No need to copy the output tensor to device before computation
 
 	// Define CudaKernel settings.
-	dim3 threadInBlock(1, 1, input_tensor->depth); // Adjust to suitable block size
+	dim3 threadInBlock(1, 1, 8); // Adjust to suitable block size
 	dim3 numBlocks;
 	numBlocks.x = (input_tensor->col + threadInBlock.x - 1) / threadInBlock.x;
 	numBlocks.y = (input_tensor->row + threadInBlock.y - 1) / threadInBlock.y;
+	int memsize_shared_memory = threadInBlock.z * sizeof(float);
 
 	// Get the starting time.
 	cudaError_t cudaStatus;
 
 	// Launch the cuda kernel that performs the convolution.
-	convolution_parallel << <numBlocks, threadInBlock >> > (dev_input_data, input_tensor->row, input_tensor->col, dev_kernel, kernel_size, dev_output_data);
+	convolution_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_input_data, input_tensor->row, input_tensor->col, input_tensor->depth, dev_kernel, kernel_size, stride, dev_output_data);
 
 	// Compute the elapsed time in ms.
 	cudaStatus = cudaGetLastError();
@@ -49,25 +50,26 @@ cudaError_t Conv2dWithCuda(struct tensor* input_tensor, struct tensor* kernel, i
 	return cudaStatus;
 }
 
-__global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, float* kernel, int kernel_size, float* output_tensor) {
+__global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, int nchannels, float* kernel, int kernel_size, int stride, float* output_tensor) {
     // This function defines the kernel execute in every GPU's thread.
     // In the GPU version, we don't need the outer for loop to iterate over the all image. But, each thread operates on a single sub-image.
 
-    __shared__ float tmp_conv_channels[3];
+    extern __shared__ float tmp_conv_channels[];
 
     // Compute the padding size
     int pad = kernel_size / 2;
 
-    // Get the row, col, and channel of the image the thread is pointing on.
-    int row = threadIdx.y + blockIdx.y * blockDim.y;
-    int col = threadIdx.x + blockIdx.x * blockDim.x;
-    int channel = threadIdx.z;
+    // Get the row, col, and channel of the image the thread is pointing on considering the stride factor.
+    int row = (threadIdx.y + blockIdx.y * blockDim.y) * stride;
+    int col = (threadIdx.x + blockIdx.x * blockDim.x) * stride;
+    int tid = threadIdx.z;	
+	int channel = tid;
 
     // Ensure the pixel is inside a valid region of the image.
-    if ((row < nrow) && (col < ncol)) {
+    if ((row < nrow) && (col < ncol) && (tid < nchannels)) {
         float result = 0.0f;
 
-		// Padding
+		// Padding (make it more efficient)
 		int start_row = 0;
 		int start_col = 0;
 		int end_row = kernel_size;
@@ -87,20 +89,39 @@ __global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, fl
 		}
 
 		// Convolution
-        for (int i = start_row; i < end_row; i++) {
-            for (int j = start_col; j < end_col; j++) {
-                int img_row = row + i - pad;
-                int img_col = col + j - pad;
-                int img_idx = channel * nrow * ncol + img_row * ncol + img_col;
-                int kernel_idx = channel * kernel_size * kernel_size + i * kernel_size + j;
-                result += kernel[kernel_idx] * input_tensor[img_idx];
-            }
-        }
-
-        tmp_conv_channels[channel] = result;
+		while (channel < nchannels) {
+			for (int i = start_row; i < end_row; i++) {
+				for (int j = start_col; j < end_col; j++) {
+					int img_row = row + i - pad;
+					int img_col = col + j - pad;
+					int img_idx = channel * nrow * ncol + img_row * ncol + img_col;
+					int kernel_idx = channel * kernel_size * kernel_size + i * kernel_size + j;
+					result += kernel[kernel_idx] * input_tensor[img_idx];
+				}
+			}
+			channel += blockDim.z;
+		}
+        tmp_conv_channels[tid] = result;
     }
 
-	// Riparametrizzazione convoluzione
+    // Synchronize to ensure all threads have written to shared memory
+    __syncthreads();
+
+	// Reduction algorithm to sum results across all channels using the shared memory
+	for (int s = blockDim.z / 2; s > 0; s >>= 1) {
+		if (tid < s) {
+			tmp_conv_channels[tid] += tmp_conv_channels[tid + s];
+		}
+		__syncthreads();
+	}
+
+	if (tid == 0) {
+		int output_image_idx = (blockIdx.y * blockDim.y + threadIdx.y) * (ncol / stride) + (blockIdx.x * blockDim.x + threadIdx.x);
+		output_tensor[output_image_idx] = tmp_conv_channels[0];
+	}
+}
+
+// Riparametrizzazione convoluzione
 	/*
 	if ((row >= pad && row < (nrow - pad)) && (col >= pad && col < (ncol - pad))) {
 		int start_idx = -kernel_size / 2;
@@ -117,18 +138,3 @@ __global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, fl
 		tmp_conv_channels[channel] = result;
 	}
 	*/
-
-    // Synchronize to ensure all threads have written to shared memory
-    __syncthreads();
-
-	// Reduction algorithm to sum results across all channels using the shared memory
-    if (channel == 0) {
-        // Accumulate results from all channels
-        float sum = 0.0f;
-        for (int i = 0; i < 3; i++) {
-            sum += tmp_conv_channels[i];
-        }
-        int output_image_idx = row * ncol + col;
-        output_tensor[output_image_idx] = sum;
-    }
-}
