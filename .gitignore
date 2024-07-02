@@ -2,3 +2,5 @@
 *.db
 *.db-shm
 *.ipch
+*.VC.db
+*.suo
