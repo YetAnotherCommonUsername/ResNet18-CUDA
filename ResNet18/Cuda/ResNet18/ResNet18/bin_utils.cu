@@ -1,6 +1,6 @@
 #include "bin_utils.cuh"
 
-void load_weights(const char* filename, struct tensor* kernels, int kernel_size, int num_channels, int num_filters) {
+void load_conv_weights(const char* filename, struct tensor* kernels, int kernel_size, int num_channels, int num_filters) {
     FILE* fin;
     int i, npixel;
     char buffer[200];
@@ -30,5 +30,56 @@ void load_weights(const char* filename, struct tensor* kernels, int kernel_size,
             exit(-1);
         }
     }
+    fclose(fin);
+}
+
+void load_linear_weights(const char* filename, float* weights, int input_size, int num_classes) {
+    FILE* fin;
+    int i, npixel;
+    char buffer[200];
+
+    fin = fopen(filename, "rb");
+    if (fin == NULL) {
+        printf("Error reading the file\n");
+        exit(-1);
+    }
+    // Read the image type.
+    // fgets(buffer, sizeof(buffer), fin);
+
+    // Read the file
+    int num_params = input_size * num_classes;
+
+    // Read weights into the kernel's data array
+    size_t read_elements = fread(weights, sizeof(float), num_params, fin);
+
+    if (read_elements != num_params) {
+        printf("Error reading weights from file\n");
+        fclose(fin);
+        exit(-1);
+    }
+
+    fclose(fin);
+}
+
+void load_linear_bias(const char* filename, float* bias, int num_classes) {
+    FILE* fin;
+    int i, npixel;
+    char buffer[200];
+
+    fin = fopen(filename, "rb");
+    if (fin == NULL) {
+        printf("Error reading the file\n");
+        exit(-1);
+    }
+
+    // Read the file
+    size_t read_elements = fread(bias, sizeof(float), num_classes, fin);
+    
+    if (read_elements != num_classes) {
+        printf("Error reading weights from file\n");
+        fclose(fin);
+        exit(-1);
+    }
+
     fclose(fin);
 }

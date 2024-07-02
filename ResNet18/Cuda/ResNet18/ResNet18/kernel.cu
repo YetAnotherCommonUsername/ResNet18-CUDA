@@ -12,10 +12,11 @@ void test_pooling();
 void test_residual_connection();
 void test_fully_connected();
 void test_read_image();
-void test_read_weights();
+void test_read_conv_weights();
+void test_read_linear();
 
 int main() {
-    test_read_weights();  // Change this to switch the entry point
+    test_read_linear();  // Change this to switch the entry point
     return 0;
 }
 
@@ -298,7 +299,7 @@ void test_read_image() {
     free_tensor(&img_tensor);
 }
 
-void test_read_weights() {
+void test_read_conv_weights() {
     // File to read
     const char* filename = "./../../../Parameters/conv_weights_0.bin";
 
@@ -311,7 +312,7 @@ void test_read_weights() {
     struct tensor* kernels;
     kernels = (struct tensor*)malloc(num_filters * sizeof(struct tensor));
 
-    load_weights(filename, kernels, kernel_size, num_channels, num_filters);
+    load_conv_weights(filename, kernels, kernel_size, num_channels, num_filters);
 
     // Check the results
     print_tensor(&kernels[0]);
@@ -322,3 +323,32 @@ void test_read_weights() {
     }
 }
 
+void test_read_linear() {
+    // File to read
+    const char* filename_weights = "./../../../Parameters/linear_weights_51.bin";
+    const char* filename_bias = "./../../../Parameters/linear_bias_51.bin";
+
+    // Define the size of the kernel
+    int input_size = 512;
+    int num_classes = 1000;
+
+    // Define the weights and bias arrays
+    float* weights;
+    weights = (float*)malloc(input_size * num_classes * sizeof(float));
+    
+    float* bias;
+    bias = (float*)malloc(num_classes * sizeof(float));
+
+
+    load_linear_weights(filename_weights, weights, input_size, num_classes);
+    load_linear_bias(filename_bias, bias, num_classes);
+
+    // Check the results
+    for (int i = 0; i < 10; i++) {
+        printf("%f\n", bias[i]);
+    }
+
+    // Free allocated memory
+    free(weights);
+    free(bias);
+}
