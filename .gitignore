@@ -4,3 +4,6 @@
 *.ipch
 *.VC.db
 *.suo
+*conv_weights*.bin
+*batch*.bin
+*linear*.bin

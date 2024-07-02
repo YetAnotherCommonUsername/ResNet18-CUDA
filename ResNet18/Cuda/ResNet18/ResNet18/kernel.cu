@@ -2,6 +2,7 @@
 #include "device_launch_parameters.h"
 #include "jpg_utils.cuh"
 #include "model_utils.cuh"
+#include "bin_utils.cuh"
 #include <stdio.h>
 #include <time.h>
 
@@ -10,9 +11,11 @@ void test_convolution();
 void test_pooling();
 void test_residual_connection();
 void test_fully_connected();
+void test_read_image();
+void test_read_weights();
 
 int main() {
-    test_fully_connected();  // Change this to switch the entry point
+    test_read_weights();  // Change this to switch the entry point
     return 0;
 }
 
@@ -280,5 +283,42 @@ void test_fully_connected() {
     free(weights);
     free(bias);
     free(output_array);
+}
+
+void test_read_image() {
+    struct tensor img_tensor;
+    const char* filename = "./../../../dog.jpg";
+
+    load_image_as_tensor(filename, &img_tensor);
+
+    // You can now use img_tensor
+    printf("Image loaded: %dx%dx%d\n", img_tensor.row, img_tensor.col, img_tensor.depth);
+
+    // Free allocated memory
+    free_tensor(&img_tensor);
+}
+
+void test_read_weights() {
+    // File to read
+    const char* filename = "./../../../Parameters/conv_weights_0.bin";
+
+    // Define the size of the kernel
+    int kernel_size = 7;
+    int num_channels = 3;
+    int num_filters = 64;
+
+    // Define the kernel tensor
+    struct tensor* kernels;
+    kernels = (struct tensor*)malloc(num_filters * sizeof(struct tensor));
+
+    load_weights(filename, kernels, kernel_size, num_channels, num_filters);
+
+    // Check the results
+    print_tensor(&kernels[0]);
+
+    // Free allocated memory
+    for (int i = 0; i < num_filters; i++) {
+        free_tensor(&kernels[i]);
+    }
 }
 

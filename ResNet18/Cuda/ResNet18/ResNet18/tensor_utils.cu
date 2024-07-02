@@ -25,7 +25,6 @@ void init_random_tensor(struct tensor* t) {
 
     const int seed = 111222333;
     srand(seed);
-    float rand_num;
 
     for (int i = 0; i < t->depth; i++) {
         for (int j = 0; j < num_elements; j++) {
