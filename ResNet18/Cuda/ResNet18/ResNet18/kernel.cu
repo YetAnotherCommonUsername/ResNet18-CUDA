@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     int image_size = 6;
     int num_channels = 4;
     int kernel_size = 3;
-    int num_filters = 1;
+    int num_filters = 2;
     int stride = 2;
 
     // Read the image and store it in a tensor
@@ -28,22 +28,29 @@ int main(int argc, char** argv)
     init_tensor(&img_tensor);
 
     // Check img_tensor
+    printf("Image tensor:\n");
     print_tensor(&img_tensor);
 
-    // Print some information about the tensor
-    printf("Image loaded successfully:\n");
-    printf("Dimensions: %d x %d x %d\n", img_tensor.depth, img_tensor.row, img_tensor.col);
-
     // Declare the kernel
-    struct tensor kernel;
-    kernel.row = kernel_size;
-    kernel.col = kernel_size;
-    kernel.depth = num_channels;
-    kernel.data = (float*)malloc(kernel.row * kernel.col * kernel.depth * sizeof(float));
-    init_tensor(&kernel);
+    struct tensor* kernels = (struct tensor*)malloc(num_filters * sizeof(struct tensor));
+    if (kernels == NULL) {
+        fprintf(stderr, "Failed to allocate memory for kernels\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < num_filters; i++) {
+        kernels[i].row = kernel_size;
+        kernels[i].col = kernel_size;
+        kernels[i].depth = num_channels;
+        kernels[i].data = (float*)malloc(kernels[i].row * kernels[i].col * kernels[i].depth * sizeof(float));
+        init_tensor(&kernels[i]);
+    }
 
     // Check img_tensor
-    print_tensor(&kernel);
+    printf("Kernel tensors:\n");
+    for (int i = 0; i < 2; i++) {
+        print_tensor(&kernels[i]);
+    }
 
     // GPU CONVOLUTION
     // Declare the structure to store the output of the convolution with GPU
@@ -58,7 +65,7 @@ int main(int argc, char** argv)
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = Conv2dWithCuda(&img_tensor, &kernel, kernel_size, stride, num_channels, num_filters, &output_tensor);
+    cudaError_t cudaStatus = Conv2dWithCuda(&img_tensor, kernels, kernel_size, stride, num_channels, num_filters, &output_tensor);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
@@ -71,9 +78,10 @@ int main(int argc, char** argv)
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free_tensor(&kernel);
+    for (int i = 0; i < num_filters; i++) {
+        free_tensor(&kernels[i]);
+    }
     free_tensor(&output_tensor);
 
     return 0;
 }
-
