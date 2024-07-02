@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cuda_runtime.h>
+#include <curand.h>
 #include "device_launch_parameters.h"
 
 struct tensor {
@@ -13,4 +14,5 @@ struct tensor {
 
 void free_tensor(struct tensor* t);
 void init_tensor(struct tensor* t);
+void init_random_tensor(struct tensor* t);
 void print_tensor(struct tensor* t);

@@ -19,6 +19,21 @@ void init_tensor(struct tensor* t) {
     }
 }
 
+// Function to randomly initializate the tensor
+void init_random_tensor(struct tensor* t) {
+    int num_elements = t->row * t->col;
+
+    const int seed = 111222333;
+    srand(seed);
+    float rand_num;
+
+    for (int i = 0; i < t->depth; i++) {
+        for (int j = 0; j < num_elements; j++) {
+            t->data[i * num_elements + j] = static_cast<float>(rand()) / RAND_MAX;
+        }
+    }
+}
+
 // Function to print the tensor
 void print_tensor(struct tensor* t) {
     int num_elements = t->row * t->col;
