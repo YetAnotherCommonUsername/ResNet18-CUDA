@@ -6,4 +6,3 @@
 #include "tensor_utils.cuh"
 
 void load_image_as_tensor(const char* filename, struct tensor* img_tensor);
-void load_weights(char* filename, struct tensor* kernel);

@@ -33,7 +33,7 @@ void load_conv_weights(const char* filename, struct tensor* kernels, int kernel_
     fclose(fin);
 }
 
-void load_linear_weights(const char* filename, float* weights, int input_size, int num_classes) {
+void load_matrix(const char* filename, float* weights, int ncol, int nrow) {
     FILE* fin;
     int i, npixel;
     char buffer[200];
@@ -47,7 +47,7 @@ void load_linear_weights(const char* filename, float* weights, int input_size, i
     // fgets(buffer, sizeof(buffer), fin);
 
     // Read the file
-    int num_params = input_size * num_classes;
+    int num_params = ncol * nrow;
 
     // Read weights into the kernel's data array
     size_t read_elements = fread(weights, sizeof(float), num_params, fin);
@@ -61,7 +61,7 @@ void load_linear_weights(const char* filename, float* weights, int input_size, i
     fclose(fin);
 }
 
-void load_linear_bias(const char* filename, float* bias, int num_classes) {
+void load_array(const char* filename, float* weights, int size) {
     FILE* fin;
     int i, npixel;
     char buffer[200];
@@ -73,9 +73,9 @@ void load_linear_bias(const char* filename, float* bias, int num_classes) {
     }
 
     // Read the file
-    size_t read_elements = fread(bias, sizeof(float), num_classes, fin);
+    size_t read_elements = fread(weights, sizeof(float), size, fin);
     
-    if (read_elements != num_classes) {
+    if (read_elements != size) {
         printf("Error reading weights from file\n");
         fclose(fin);
         exit(-1);

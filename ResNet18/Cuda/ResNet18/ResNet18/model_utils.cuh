@@ -7,6 +7,7 @@
 #include <cuda_runtime.h>
 #include "device_launch_parameters.h"
 #include "tensor_utils.cuh"
+#include "bin_utils.cuh"
 
 // void convolution_parallel(struct tensor* input_image, int* kernel, int kernel_size, struct tensor* output_image);
 
@@ -28,13 +29,7 @@ __global__ void fully_connected_parallel(float* input_array, float* weights, flo
 cudaError_t ReLUWithCuda(struct tensor* input_tensor,  struct tensor* output_tensor);
 __global__ void relu_parallel(float* input_tensor, int nrow, int ncol, float* output_tensor);
 
-cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, float gamma, float mean, float std, struct tensor* output_tensor);
-__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float beta, float gamma, float mean, float std, float* output_tensor);
+cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float* beta, float* gamma, float* mean, float* std, struct tensor* output_tensor);
+__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float* beta, float* gamma, float* mean, float* std, float* output_tensor);
 
-// cudaError_t IdentityBlock
-
-// cudaError_t ConvolutionalBlock
-
-// cudaError_t Layer
-
-// cudaError_t ResNet(struct tensor* input_tensor, float* output_classes);
+cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes);

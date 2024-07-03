@@ -462,16 +462,33 @@ __global__ void relu_parallel(float* input_tensor, int nrow, int ncol, float* ou
 	}
 }
 
-cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, float gamma, float mean, float std, struct tensor* output_tensor) {
+cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float* beta, float* gamma, float* mean, float* std, struct tensor* output_tensor) {
 	int nrow = input_tensor->row;
 	int ncol = input_tensor->col;
 	int nchannels = input_tensor->depth;
 
 	int memsize = nrow * ncol * nchannels * sizeof(float);
+	int memsize_parameters = nchannels * sizeof(float);
 
 	float* dev_input_data;
 	cudaMalloc((void**)&dev_input_data, memsize);
 	cudaMemcpy(dev_input_data, input_tensor->data, memsize, cudaMemcpyHostToDevice);
+
+	float* dev_beta;
+	cudaMalloc((void**)&dev_beta, memsize_parameters);
+	cudaMemcpy(dev_beta, beta, memsize_parameters, cudaMemcpyHostToDevice);
+
+	float* dev_gamma;
+	cudaMalloc((void**)&dev_gamma, memsize_parameters);
+	cudaMemcpy(dev_gamma, gamma, memsize_parameters, cudaMemcpyHostToDevice);
+
+	float* dev_mean;
+	cudaMalloc((void**)&dev_mean, memsize_parameters);
+	cudaMemcpy(dev_mean, mean, memsize_parameters, cudaMemcpyHostToDevice);
+
+	float* dev_std;
+	cudaMalloc((void**)&dev_std, memsize_parameters);
+	cudaMemcpy(dev_std, std, memsize_parameters, cudaMemcpyHostToDevice);
 
 	float* dev_output_data;
 	cudaMalloc((void**)&dev_output_data, memsize);
@@ -483,7 +500,7 @@ cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, 
 	numBlocks.y = (nrow + threadInBlock.y - 1) / threadInBlock.y;
 	numBlocks.z = nchannels;
 
-	batch_normalization_parallel << <numBlocks, threadInBlock >> > (dev_input_data, nrow, ncol, beta, gamma, mean, std, dev_output_data);
+	batch_normalization_parallel << <numBlocks, threadInBlock >> > (dev_input_data, nrow, ncol, dev_beta, dev_gamma, dev_mean, dev_std, dev_output_data);
 
 	cudaError_t cudaStatus = cudaGetLastError();
 	if (cudaStatus != cudaSuccess) {
@@ -498,7 +515,7 @@ cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, 
 	return cudaStatus;
 }
 
-__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float beta, float gamma, float mean, float std, float* output_tensor) {
+__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float* beta, float* gamma, float* mean, float* std, float* output_tensor) {
 	int row = blockIdx.y * blockDim.y + threadIdx.y;
 	int col = blockIdx.x * blockDim.x + threadIdx.x;
 	int channel = blockIdx.z;
@@ -506,8 +523,473 @@ __global__ void batch_normalization_parallel(float* input_tensor, int nrow, int 
 	int tid = channel * nrow * ncol + row * ncol + col;
 
 	if (row < nrow && col < ncol) {
-		output_tensor[tid] = gamma * (input_tensor[tid] - mean)/std + beta;
+		output_tensor[tid] = gamma[channel] * (input_tensor[tid] - mean[channel])/std[channel] + beta[channel];
 	}
 }
 
+cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
+	// Dimensions and sizes based on ResNet18 architecture
+	int num_filters1 = 64, num_filters2 = 64, num_filters3 = 128, num_filters4 = 256, num_filters5 = 512;
+	int kernel_size = 3, stride = 1, pool_size = 3, num_classes = 1000;
+
+	// Allocate memory for weights and biases
+	// conv1
+	struct tensor* conv1_weights;
+	float* conv1_batch1_beta, * conv1_batch1_gamma, * conv1_batch1_mean, * conv1_batch1_std;
+
+	// conv2_x
+	struct tensor* conv2_1_weights, * conv2_2_weights, * conv2_3_weights, * conv2_4_weights;
+	float* conv2_batch1_beta, * conv2_batch1_gamma, * conv2_batch1_mean, * conv2_batch1_std;
+	float* conv2_batch2_beta, * conv2_batch2_gamma, * conv2_batch2_mean, * conv2_batch2_std;
+	float* conv2_batch3_beta, * conv2_batch3_gamma, * conv2_batch3_mean, * conv2_batch3_std;
+	float* conv2_batch4_beta, * conv2_batch4_gamma, * conv2_batch4_mean, * conv2_batch4_std;
+
+	// conv3_x
+	struct tensor* conv3_1_weights, * conv3_2_weights, * conv3_3_weights, * conv3_4_weights, * conv3_5_weights;
+	float* conv3_batch1_beta, * conv3_batch1_gamma, * conv3_batch1_mean, * conv3_batch1_std;
+	float* conv3_batch2_beta, * conv3_batch2_gamma, * conv3_batch2_mean, * conv3_batch2_std;
+	float* conv3_batch3_beta, * conv3_batch3_gamma, * conv3_batch3_mean, * conv3_batch3_std;
+	float* conv3_batch4_beta, * conv3_batch4_gamma, * conv3_batch4_mean, * conv3_batch4_std;
+	float* conv3_batch5_beta, * conv3_batch5_gamma, * conv3_batch5_mean, * conv3_batch5_std;
+
+	// conv4_x
+	struct tensor* conv4_1_weights, * conv4_2_weights, * conv4_3_weights, * conv4_4_weights, * conv4_5_weights;
+	float* conv4_batch1_beta, * conv4_batch1_gamma, * conv4_batch1_mean, * conv4_batch1_std;
+	float* conv4_batch2_beta, * conv4_batch2_gamma, * conv4_batch2_mean, * conv4_batch2_std;
+	float* conv4_batch3_beta, * conv4_batch3_gamma, * conv4_batch3_mean, * conv4_batch3_std;
+	float* conv4_batch4_beta, * conv4_batch4_gamma, * conv4_batch4_mean, * conv4_batch4_std;
+	float* conv4_batch5_beta, * conv4_batch5_gamma, * conv4_batch5_mean, * conv4_batch5_std;
+
+	// conv5_x
+	struct tensor* conv5_1_weights, * conv5_2_weights, * conv5_3_weights, * conv5_4_weights, * conv5_5_weights;
+	float* conv5_batch1_beta, * conv5_batch1_gamma, * conv5_batch1_mean, * conv5_batch1_std;
+	float* conv5_batch2_beta, * conv5_batch2_gamma, * conv5_batch2_mean, * conv5_batch2_std;
+	float* conv5_batch3_beta, * conv5_batch3_gamma, * conv5_batch3_mean, * conv5_batch3_std;
+	float* conv5_batch4_beta, * conv5_batch4_gamma, * conv5_batch4_mean, * conv5_batch4_std;
+	float* conv5_batch5_beta, * conv5_batch5_gamma, * conv5_batch5_mean, * conv5_batch5_std;
+
+	// Fully connected
+	float* fc_weights, * fc_bias;
+
+	// Load weights from binary files
+	// conv1
+	conv1_weights = (struct tensor*)malloc(num_filters1 * (input_tensor->depth * 7 * 7 * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_0.bin", conv1_weights, 7, input_tensor->depth, num_filters1);
+
+	conv1_batch1_beta = (float*)malloc(num_filters1 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_1.bin", conv1_batch1_beta, num_filters1);
+    conv1_batch1_gamma = (float*)malloc(num_filters1 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_1.bin", conv1_batch1_gamma, num_filters1);
+    conv1_batch1_mean = (float*)malloc(num_filters1 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_1.bin", conv1_batch1_mean, num_filters1);
+    conv1_batch1_std = (float*)malloc(num_filters1 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_1.bin", conv1_batch1_std, num_filters1);
+
+	// conv2_x
+	conv2_1_weights = (struct tensor*)malloc(num_filters2 * (num_filters1 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_4.bin", conv2_1_weights, kernel_size, num_filters1, num_filters2);
+	conv2_2_weights = (struct tensor*)malloc(num_filters2 * (num_filters2 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_7.bin", conv2_2_weights, kernel_size, num_filters2, num_filters2);
+	conv2_3_weights = (struct tensor*)malloc(num_filters2 * (num_filters2 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_9.bin", conv2_3_weights, kernel_size, num_filters2, num_filters2);
+	conv2_4_weights = (struct tensor*)malloc(num_filters2 * (num_filters2 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_12.bin", conv2_4_weights, kernel_size, num_filters2, num_filters2);
+
+	conv2_batch1_beta = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_5.bin", conv2_batch1_beta, num_filters2);
+	conv2_batch1_gamma = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_5.bin", conv2_batch1_gamma, num_filters2);
+	conv2_batch1_mean = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_5.bin", conv2_batch1_mean, num_filters2);
+	conv2_batch1_std = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_5.bin", conv2_batch1_std, num_filters2);
+
+	conv2_batch2_beta = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_8.bin", conv2_batch1_beta, num_filters2);
+	conv2_batch2_gamma = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_8.bin", conv2_batch1_gamma, num_filters2);
+	conv2_batch2_mean = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_8.bin", conv2_batch1_mean, num_filters2);
+	conv2_batch2_std = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_8.bin", conv2_batch1_std, num_filters2);
+
+	conv2_batch3_beta = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_10.bin", conv2_batch1_beta, num_filters2);
+	conv2_batch3_gamma = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_10.bin", conv2_batch1_gamma, num_filters2);
+	conv2_batch3_mean = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_10.bin", conv2_batch1_mean, num_filters2);
+	conv2_batch3_std = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_10.bin", conv2_batch1_std, num_filters2);
+
+	conv2_batch4_beta = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_13.bin", conv2_batch1_beta, num_filters2);
+	conv2_batch4_gamma = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_13.bin", conv2_batch1_gamma, num_filters2);
+	conv2_batch4_mean = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_13.bin", conv2_batch1_mean, num_filters2);
+	conv2_batch4_std = (float*)malloc(num_filters2 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_13.bin", conv2_batch1_std, num_filters2);
+
+	// conv3_x
+	conv3_1_weights = (struct tensor*)malloc(num_filters3 * (num_filters2 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_14.bin", conv3_1_weights, kernel_size, num_filters2, num_filters3);
+	conv3_2_weights = (struct tensor*)malloc(num_filters3 * (num_filters3 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_17.bin", conv3_2_weights, kernel_size, num_filters3, num_filters3);
+	conv3_3_weights = (struct tensor*)malloc(num_filters3 * (num_filters2 * 1 * 1 * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_19.bin", conv3_3_weights, 1, num_filters2, num_filters3);
+	conv3_4_weights = (struct tensor*)malloc(num_filters3 * (num_filters3 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_21.bin", conv3_4_weights, kernel_size, num_filters3, num_filters3);
+	conv3_5_weights = (struct tensor*)malloc(num_filters3 * (num_filters3 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_24.bin", conv3_5_weights, kernel_size, num_filters3, num_filters3);
+
+	conv3_batch1_beta = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_15.bin", conv3_batch1_beta, num_filters3);
+	conv3_batch1_gamma = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_15.bin", conv3_batch1_gamma, num_filters3);
+	conv3_batch1_mean = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_15.bin", conv3_batch1_mean, num_filters3);
+	conv3_batch1_std = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_15.bin", conv3_batch1_std, num_filters3);
+
+	conv3_batch2_beta = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_18.bin", conv3_batch2_beta, num_filters3);
+	conv3_batch2_gamma = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_18.bin", conv3_batch2_gamma, num_filters3);
+	conv3_batch2_mean = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_18.bin", conv3_batch2_mean, num_filters3);
+	conv3_batch2_std = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_18.bin", conv3_batch2_std, num_filters3);
+
+	conv3_batch3_beta = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_20.bin", conv3_batch3_beta, num_filters3);
+	conv3_batch3_gamma = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_20.bin", conv3_batch3_gamma, num_filters3);
+	conv3_batch3_mean = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_20.bin", conv3_batch3_mean, num_filters3);
+	conv3_batch3_std = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_20.bin", conv3_batch3_std, num_filters3);
+
+	conv3_batch4_beta = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_22.bin", conv3_batch4_beta, num_filters3);
+	conv3_batch4_gamma = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_22.bin", conv3_batch4_gamma, num_filters3);
+	conv3_batch4_mean = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_22.bin", conv3_batch4_mean, num_filters3);
+	conv3_batch4_std = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_22.bin", conv3_batch4_std, num_filters3);
+
+	conv3_batch5_beta = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_25.bin", conv3_batch5_beta, num_filters3);
+	conv3_batch5_gamma = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_25.bin", conv3_batch5_gamma, num_filters3);
+	conv3_batch5_mean = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_25.bin", conv3_batch5_mean, num_filters3);
+	conv3_batch5_std = (float*)malloc(num_filters3 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_25.bin", conv3_batch5_std, num_filters3);
+
+	// conv4_x
+	conv4_1_weights = (struct tensor*)malloc(num_filters4 * (num_filters3 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_26.bin", conv4_1_weights, kernel_size, num_filters3, num_filters4);
+	conv4_2_weights = (struct tensor*)malloc(num_filters4 * (num_filters4 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_29.bin", conv4_2_weights, kernel_size, num_filters4, num_filters4);
+	conv4_3_weights = (struct tensor*)malloc(num_filters4 * (num_filters3 * 1 * 1 * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_31.bin", conv4_3_weights, 1, num_filters3, num_filters4);
+	conv4_4_weights = (struct tensor*)malloc(num_filters4 * (num_filters4 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_33.bin", conv4_4_weights, kernel_size, num_filters4, num_filters4);
+	conv4_5_weights = (struct tensor*)malloc(num_filters4 * (num_filters4 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_36.bin", conv4_5_weights, kernel_size, num_filters4, num_filters4);
+
+	conv4_batch1_beta = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_27.bin", conv4_batch1_beta, num_filters4);
+	conv4_batch1_gamma = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_27.bin", conv4_batch1_gamma, num_filters4);
+	conv4_batch1_mean = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_27.bin", conv4_batch1_mean, num_filters4);
+	conv4_batch1_std = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_27.bin", conv4_batch1_std, num_filters4);
+
+	conv4_batch2_beta = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_30.bin", conv4_batch2_beta, num_filters4);
+	conv4_batch2_gamma = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_30.bin", conv4_batch2_gamma, num_filters4);
+	conv4_batch2_mean = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_30.bin", conv4_batch2_mean, num_filters4);
+	conv4_batch2_std = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_30.bin", conv4_batch2_std, num_filters4);
+
+	conv4_batch3_beta = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_32.bin", conv4_batch3_beta, num_filters4);
+	conv4_batch3_gamma = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_32.bin", conv4_batch3_gamma, num_filters4);
+	conv4_batch3_mean = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_32.bin", conv4_batch3_mean, num_filters4);
+	conv4_batch3_std = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_32.bin", conv4_batch3_std, num_filters4);
+
+	conv4_batch4_beta = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_34.bin", conv4_batch4_beta, num_filters4);
+	conv4_batch4_gamma = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_34.bin", conv4_batch4_gamma, num_filters4);
+	conv4_batch4_mean = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_34.bin", conv4_batch4_mean, num_filters4);
+	conv4_batch4_std = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_34.bin", conv4_batch4_std, num_filters4);
+
+	conv4_batch5_beta = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_37.bin", conv4_batch5_beta, num_filters4);
+	conv4_batch5_gamma = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_37.bin", conv4_batch5_gamma, num_filters4);
+	conv4_batch5_mean = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_37.bin", conv4_batch5_mean, num_filters4);
+	conv4_batch5_std = (float*)malloc(num_filters4 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_37.bin", conv4_batch5_std, num_filters4);
+
+	// conv5_x
+	conv5_1_weights = (struct tensor*)malloc(num_filters5 * (num_filters4 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_38.bin", conv5_1_weights, kernel_size, num_filters4, num_filters5);
+	conv5_2_weights = (struct tensor*)malloc(num_filters5 * (num_filters5 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_41.bin", conv5_2_weights, kernel_size, num_filters5, num_filters5);
+	conv5_3_weights = (struct tensor*)malloc(num_filters5 * (num_filters4 * 1 * 1 * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_43.bin", conv5_3_weights, 1, num_filters4, num_filters5);
+	conv5_4_weights = (struct tensor*)malloc(num_filters5 * (num_filters5 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_45.bin", conv5_4_weights, kernel_size, num_filters5, num_filters5);
+	conv5_5_weights = (struct tensor*)malloc(num_filters5 * (num_filters5 * kernel_size * kernel_size * sizeof(float) + 3 * sizeof(int)));
+	load_conv_weights("./../../../Parameters/conv_weights_48.bin", conv5_5_weights, kernel_size, num_filters5, num_filters5);
 	
+	conv5_batch1_beta = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_39.bin", conv5_batch1_beta, num_filters5);
+	conv5_batch1_gamma = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_39.bin", conv5_batch1_gamma, num_filters5);
+	conv5_batch1_mean = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_39.bin", conv5_batch1_mean, num_filters5);
+	conv5_batch1_std = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_39.bin", conv5_batch1_std, num_filters5);
+
+	conv5_batch2_beta = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_42.bin", conv5_batch2_beta, num_filters5);
+	conv5_batch2_gamma = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_42.bin", conv5_batch2_gamma, num_filters5);
+	conv5_batch2_mean = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_42.bin", conv5_batch2_mean, num_filters5);
+	conv5_batch2_std = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_42.bin", conv5_batch2_std, num_filters5);
+
+	conv5_batch3_beta = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_44.bin", conv5_batch3_beta, num_filters5);
+	conv5_batch3_gamma = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_44.bin", conv5_batch3_gamma, num_filters5);
+	conv5_batch3_mean = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_44.bin", conv5_batch3_mean, num_filters5);
+	conv5_batch3_std = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_44.bin", conv5_batch3_std, num_filters5);
+
+	conv5_batch4_beta = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_46.bin", conv5_batch4_beta, num_filters5);
+	conv5_batch4_gamma = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_46.bin", conv5_batch4_gamma, num_filters5);
+	conv5_batch4_mean = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_46.bin", conv5_batch4_mean, num_filters5);
+	conv5_batch4_std = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_46.bin", conv5_batch4_std, num_filters5);
+
+	conv5_batch5_beta = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_beta_49.bin", conv5_batch5_beta, num_filters5);
+	conv5_batch5_gamma = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_gamma_49.bin", conv5_batch5_gamma, num_filters5);
+	conv5_batch5_mean = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_mean_49.bin", conv5_batch5_mean, num_filters5);
+	conv5_batch5_std = (float*)malloc(num_filters5 * sizeof(float));
+	load_array("./../../../Parameters/batch_std_49.bin", conv5_batch5_std, num_filters5);
+
+	// Fully connected
+	fc_weights = (float*)malloc(num_filters5 * num_classes * sizeof(float)); 
+	load_matrix("./../../../Parameters/linear_weights_51.bin", fc_weights, num_filters5, num_classes);
+	fc_bias = (float*)malloc(num_classes * sizeof(float));
+	load_array("./../../../Parameters/linear_bias_51.bin", fc_bias, num_classes);
+
+	// Allocate device (GPU) memory for input, output, and intermediate tensors
+
+	// Network architecture
+	// Layer 1: conv1 -> BatchNorm -> ReLU
+	int image_size = 224;
+	int stride = 2;
+
+	dim3 threadInBlock(8, 8, 16); // Adjust to suitable block size
+	dim3 numBlocks;
+	numBlocks.x = (image_size + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (image_size + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = num_filters1;
+	int memsize_shared_memory = threadInBlock.x * threadInBlock.y * threadInBlock.z * sizeof(float);
+
+	convolution_parallel << <numBlocks, threadInBlock >> > (input_tensor->data, input_tensor->row, input_tensor->col, input_tensor->depth, conv1_weights, kernel_size, stride, output_tensor.data);
+
+	image_size = 112;
+	dim3 threadInBlock(16, 16);
+	dim3 numBlocks;
+	numBlocks.x = (image_size + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (image_size + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = num_filters1;
+
+	batch_normalization_parallel << <numBlocks, threadInBlock >> > (output_tensor.data, output_tensor.row, output_tensor.col, batch1_beta, batch1_gamma, batch1_mean, batch1_std, intermediate_tensor.data);
+	relu_parallel << <numBlocks, threadInBlock >> > (intermediate_tensor.data, intermediate_tensor.row, intermediate_tensor.col, output_tensor.data);
+
+	// Layer 2: MaxPool
+	max_pooling_parallel << <numBlocks, threadInBlock >> > (output_tensor.data, output_tensor.row, output_tensor.col, output_tensor.depth, pool_size, pool_size, intermediate_tensor.data);
+
+	// Continue for other layers with residual connections
+	// ...
+
+	/*
+	// Final average pooling and fully connected layer
+	average_pooling_parallel << <num_blocks, threads_per_block >> > (output_tensor.data, output_tensor.row, output_tensor.col, output_tensor.depth, intermediate_tensor.data);
+	fully_connected_parallel << <num_blocks, threads_per_block >> > (intermediate_tensor.data, fc_weights, fc_bias, intermediate_tensor.row * intermediate_tensor.col * intermediate_tensor.depth, num_classes, output_classes);
+	*/
+
+	// Free allocated memory
+	// conv1
+	for (int i = 0; i < num_filters1; i++) {
+		free_tensor(&conv1_weights[i]);
+	}
+
+	free(conv1_batch1_beta);
+	free(conv1_batch1_gamma);
+	free(conv1_batch1_mean);
+	free(conv1_batch1_std);
+
+	// conv2_x
+	for (int i = 0; i < num_filters2; i++) {
+		free_tensor(&conv2_1_weights[i]);
+		free_tensor(&conv2_2_weights[i]);
+		free_tensor(&conv2_3_weights[i]);
+		free_tensor(&conv2_4_weights[i]);
+	}
+
+	free(conv2_batch1_beta);
+	free(conv2_batch1_gamma);
+	free(conv2_batch1_mean);
+	free(conv2_batch1_std);
+
+	free(conv2_batch2_beta);
+	free(conv2_batch2_gamma);
+	free(conv2_batch2_mean);
+	free(conv2_batch2_std);
+
+	free(conv2_batch3_beta);
+	free(conv2_batch3_gamma);
+	free(conv2_batch3_mean);
+	free(conv2_batch3_std);
+
+	free(conv2_batch4_beta);
+	free(conv2_batch4_gamma);
+	free(conv2_batch4_mean);
+	free(conv2_batch4_std);
+
+	// conv3_x
+	for (int i = 0; i < num_filters2; i++) {
+		free_tensor(&conv3_1_weights[i]);
+		free_tensor(&conv3_2_weights[i]);
+		free_tensor(&conv3_3_weights[i]);
+		free_tensor(&conv3_4_weights[i]);
+		free_tensor(&conv3_5_weights[i]);
+	}
+
+	free(conv3_batch1_beta);
+	free(conv3_batch1_gamma);
+	free(conv3_batch1_mean);
+	free(conv3_batch1_std);
+
+	free(conv3_batch2_beta);
+	free(conv3_batch2_gamma);
+	free(conv3_batch2_mean);
+	free(conv3_batch2_std);
+
+	free(conv3_batch3_beta);
+	free(conv3_batch3_gamma);
+	free(conv3_batch3_mean);
+	free(conv3_batch3_std);
+
+	free(conv3_batch4_beta);
+	free(conv3_batch4_gamma);
+	free(conv3_batch4_mean);
+	free(conv3_batch4_std);
+
+	free(conv3_batch5_beta);
+	free(conv3_batch5_gamma);
+	free(conv3_batch5_mean);
+	free(conv3_batch5_std);
+
+	// conv4_x
+	for (int i = 0; i < num_filters2; i++) {
+		free_tensor(&conv4_1_weights[i]);
+		free_tensor(&conv4_2_weights[i]);
+		free_tensor(&conv4_3_weights[i]);
+		free_tensor(&conv4_4_weights[i]);
+		free_tensor(&conv4_5_weights[i]);
+	}
+
+	free(conv4_batch1_beta);
+	free(conv4_batch1_gamma);
+	free(conv4_batch1_mean);
+	free(conv4_batch1_std);
+
+	free(conv4_batch2_beta);
+	free(conv4_batch2_gamma);
+	free(conv4_batch2_mean);
+	free(conv4_batch2_std);
+
+	free(conv4_batch3_beta);
+	free(conv4_batch3_gamma);
+	free(conv4_batch3_mean);
+	free(conv4_batch3_std);
+
+	free(conv4_batch4_beta);
+	free(conv4_batch4_gamma);
+	free(conv4_batch4_mean);
+	free(conv4_batch4_std);
+
+	free(conv4_batch5_beta);
+	free(conv4_batch5_gamma);
+	free(conv4_batch5_mean);
+	free(conv4_batch5_std);
+
+	// conv5_x
+	for (int i = 0; i < num_filters2; i++) {
+		free_tensor(&conv5_1_weights[i]);
+		free_tensor(&conv5_2_weights[i]);
+		free_tensor(&conv5_3_weights[i]);
+		free_tensor(&conv5_4_weights[i]);
+		free_tensor(&conv5_5_weights[i]);
+	}
+
+	free(conv5_batch1_beta);
+	free(conv5_batch1_gamma);
+	free(conv5_batch1_mean);
+	free(conv5_batch1_std);
+
+	free(conv5_batch2_beta);
+	free(conv5_batch2_gamma);
+	free(conv5_batch2_mean);
+	free(conv5_batch2_std);
+
+	free(conv5_batch3_beta);
+	free(conv5_batch3_gamma);
+	free(conv5_batch3_mean);
+	free(conv5_batch3_std);
+
+	free(conv5_batch4_beta);
+	free(conv5_batch4_gamma);
+	free(conv5_batch4_mean);
+	free(conv5_batch4_std);
+
+	free(conv5_batch5_beta);
+	free(conv5_batch5_gamma);
+	free(conv5_batch5_mean);
+	free(conv5_batch5_std);
+
+	// Free fully connected layer weights and bias
+	free(fc_weights);
+	free(fc_bias);
+
+	return cudaSuccess;
+}

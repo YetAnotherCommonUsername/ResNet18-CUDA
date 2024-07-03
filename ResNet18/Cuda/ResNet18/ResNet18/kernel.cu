@@ -16,9 +16,11 @@ void test_relu();
 void test_read_image();
 void test_read_conv_weights();
 void test_read_linear();
+void test_read_batch_normalization();
+void classify_image();
 
 int main() {
-    test_relu();  // Change this to switch the entry point
+    classify_image();  // Change this to switch the entry point
     return 0;
 }
 
@@ -443,8 +445,8 @@ void test_read_linear() {
     bias = (float*)malloc(num_classes * sizeof(float));
 
 
-    load_linear_weights(filename_weights, weights, input_size, num_classes);
-    load_linear_bias(filename_bias, bias, num_classes);
+    load_matrix(filename_weights, weights, input_size, num_classes);
+    load_array(filename_bias, bias, num_classes);
 
     // Check the results
     for (int i = 0; i < 10; i++) {
@@ -454,4 +456,74 @@ void test_read_linear() {
     // Free allocated memory
     free(weights);
     free(bias);
+}
+
+void test_read_batch_normalization() {
+    // File to read
+    const char* filename = "./../../../Parameters/batch_beta_1.bin";
+
+    // Define the size of the kernel
+    int size = 64;
+
+    // Define the weights and bias arrays
+    float* bias;
+    bias = (float*)malloc(size * sizeof(float));
+
+    load_array(filename, bias, size);
+
+    // Check the results
+    for (int i = 0; i < 10; i++) {
+        printf("%f\n", bias[i]);
+    }
+
+    // Free allocated memory
+    free(bias);
+}
+
+void classify_image() {
+    printf("Classify image: \n\n");
+
+    // Variabiles to store the clock cicles used to mesure the execution time
+    time_t start;
+    time_t stop;
+    double elapsed_time;
+
+    // Set the parameters
+    int image_size = 224;
+    int num_channels = 3;
+    int num_classes = 1000;
+
+    // Read the image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = image_size;
+    img_tensor.col = image_size;
+    img_tensor.depth = num_channels;
+    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
+    init_tensor(&img_tensor);
+
+    // GPU CONVOLUTION
+    // Declare the structure to store the output of the convolution with GPU
+    float* output_classes;
+    output_classes = (float*)malloc(num_classes * sizeof(float));
+
+    memset(output_classes, 0, num_classes * sizeof(float));
+
+    start = clock();
+    // Perform convolution using GPU
+    cudaError_t cudaStatus = ResNetWithCuda(&img_tensor, output_classes);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "ResNetWithCuda failed!");
+    }
+
+    // Check the results
+    for (int i = 0; i < num_classes; i++) {
+        printf("%f\n", output_classes[i]);
+    }
+
+    // Free the image tensor memory
+    free_tensor(&img_tensor);
+    free(output_classes);
 }
