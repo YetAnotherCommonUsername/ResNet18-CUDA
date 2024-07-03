@@ -12,12 +12,13 @@ void test_max_pooling();
 void test_average_pooling();
 void test_residual_connection();
 void test_fully_connected();
+void test_relu();
 void test_read_image();
 void test_read_conv_weights();
 void test_read_linear();
 
 int main() {
-    test_average_pooling();  // Change this to switch the entry point
+    test_relu();  // Change this to switch the entry point
     return 0;
 }
 
@@ -333,6 +334,59 @@ void test_fully_connected() {
     free(weights);
     free(bias);
     free(output_array);
+}
+
+void test_relu() {
+    printf("Test ReLUWithCuda: \n\n");
+
+    // Variabiles to store the clock cicles used to mesure the execution time
+    time_t start;
+    time_t stop;
+    double elapsed_time;
+
+    // Set the parameters
+    int image_size = 6;
+    int num_channels = 3;
+
+    // Read the first image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = image_size;
+    img_tensor.col = image_size;
+    img_tensor.depth = num_channels;
+    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
+    init_random_tensor(&img_tensor);
+
+    // Check img_tensor
+    printf("Image tensor:\n");
+    print_tensor(&img_tensor);
+
+    // GPU CONVOLUTION
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor;
+    output_tensor.col = image_size;
+    output_tensor.row = image_size;
+    output_tensor.depth = num_channels;
+    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    start = clock();
+    // Perform convolution using GPU
+    cudaError_t cudaStatus = ReLUWithCuda(&img_tensor, &output_tensor);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("ReLU in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "ReLUWithCuda failed!");
+    }
+
+    // Check the results
+    print_tensor(&output_tensor);
+
+    // Free the image tensor memory
+    free_tensor(&img_tensor);
+    free_tensor(&output_tensor);
 }
 
 void test_read_image() {

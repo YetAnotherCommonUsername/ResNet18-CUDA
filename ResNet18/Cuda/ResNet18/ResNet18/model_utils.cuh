@@ -25,4 +25,16 @@ __global__ void add_tensors_parallel(float* input_tensor1, float* input_tensor2,
 cudaError_t FullyConnectedLayerWithCuda(float* input_array, float* weights, float* bias, int input_size, int num_classes, float* output_array);
 __global__ void fully_connected_parallel(float* input_array, float* weights, float* bias, int input_size, int num_classes, float* output_array);
 
+cudaError_t ReLUWithCuda(struct tensor* input_tensor,  struct tensor* output_tensor);
+__global__ void relu_parallel(float* input_tensor, int nrow, int ncol, float* output_tensor);
+
+cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, float gamma, float mean, float std, struct tensor* output_tensor);
+__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float beta, float gamma, float mean, float std, float* output_tensor);
+
+// cudaError_t IdentityBlock
+
+// cudaError_t ConvolutionalBlock
+
+// cudaError_t Layer
+
 // cudaError_t ResNet(struct tensor* input_tensor, float* output_classes);

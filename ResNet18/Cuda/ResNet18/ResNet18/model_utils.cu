@@ -414,4 +414,100 @@ __global__ void fully_connected_parallel(float* input_array, float* weights, flo
 	}
 }
 
+cudaError_t ReLUWithCuda(struct tensor* input_tensor, struct tensor* output_tensor) {
+	int nrow = input_tensor->row;
+	int ncol = input_tensor->col;
+	int nchannels = input_tensor->depth;
+
+	int memsize = nrow * ncol * nchannels * sizeof(float);
+
+	float* dev_input_data;
+	cudaMalloc((void**)&dev_input_data, memsize);
+	cudaMemcpy(dev_input_data, input_tensor->data, memsize, cudaMemcpyHostToDevice);
+
+	float* dev_output_data;
+	cudaMalloc((void**)&dev_output_data, memsize);
+
+	// Define CudaKernel settings.
+	dim3 threadInBlock(16, 16);
+	dim3 numBlocks;
+	numBlocks.x = (ncol + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (nrow + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = nchannels;
+
+	relu_parallel << <numBlocks, threadInBlock >> > (dev_input_data, nrow, ncol, dev_output_data);
+
+	cudaError_t cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "relu_parallel() launch failed: %s\n", cudaGetErrorString(cudaStatus));
+	}
+
+	cudaMemcpy(output_tensor->data, dev_output_data, memsize, cudaMemcpyDeviceToHost);
+
+	cudaFree(dev_input_data);
+	cudaFree(dev_output_data);
+
+	return cudaStatus;
+}
+
+__global__ void relu_parallel(float* input_tensor, int nrow, int ncol, float* output_tensor) {
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int channel = blockIdx.z;
+
+	int tid = channel * nrow * ncol + row * ncol + col;
+
+	if (row < nrow && col < ncol) {
+		output_tensor[tid] = fmaxf(0, input_tensor[tid]);
+	}
+}
+
+cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float beta, float gamma, float mean, float std, struct tensor* output_tensor) {
+	int nrow = input_tensor->row;
+	int ncol = input_tensor->col;
+	int nchannels = input_tensor->depth;
+
+	int memsize = nrow * ncol * nchannels * sizeof(float);
+
+	float* dev_input_data;
+	cudaMalloc((void**)&dev_input_data, memsize);
+	cudaMemcpy(dev_input_data, input_tensor->data, memsize, cudaMemcpyHostToDevice);
+
+	float* dev_output_data;
+	cudaMalloc((void**)&dev_output_data, memsize);
+
+	// Define CudaKernel settings.
+	dim3 threadInBlock(16, 16);
+	dim3 numBlocks;
+	numBlocks.x = (ncol + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (nrow + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = nchannels;
+
+	batch_normalization_parallel << <numBlocks, threadInBlock >> > (dev_input_data, nrow, ncol, beta, gamma, mean, std, dev_output_data);
+
+	cudaError_t cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "batch_normalization_parallel() launch failed: %s\n", cudaGetErrorString(cudaStatus));
+	}
+
+	cudaMemcpy(output_tensor->data, dev_output_data, memsize, cudaMemcpyDeviceToHost);
+
+	cudaFree(dev_input_data);
+	cudaFree(dev_output_data);
+
+	return cudaStatus;
+}
+
+__global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float beta, float gamma, float mean, float std, float* output_tensor) {
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int channel = blockIdx.z;
+
+	int tid = channel * nrow * ncol + row * ncol + col;
+
+	if (row < nrow && col < ncol) {
+		output_tensor[tid] = gamma * (input_tensor[tid] - mean)/std + beta;
+	}
+}
+
 	
