@@ -16,6 +16,9 @@ __global__ void convolution_parallel(float* input_tensor, int nrow, int ncol, in
 cudaError_t MaxPoolingWithCuda(struct tensor* input_tensor, int pool_size, int stride, struct tensor* output_tensor);
 __global__ void max_pooling_parallel(float* input_tensor, int nrow, int ncol, int nchannels, int pool_size, int stride, float* output_tensor);
 
+cudaError_t AveragePoolingWithCuda(struct tensor* input_tensor, float* output_array);
+__global__ void average_pooling_parallel(float* input_tensor, int nrow, int ncol, int nchannels, float* output_array);
+
 cudaError_t ResidualConnectionWithCuda(struct tensor* input_tensor1, struct tensor* input_tensor2, struct tensor* output_tensor);
 __global__ void add_tensors_parallel(float* input_tensor1, float* input_tensor2, int nrow, int ncol, float* output_tensor);
 

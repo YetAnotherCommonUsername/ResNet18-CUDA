@@ -8,7 +8,8 @@
 
 // Function prototypes for different mains
 void test_convolution();
-void test_pooling();
+void test_max_pooling();
+void test_average_pooling();
 void test_residual_connection();
 void test_fully_connected();
 void test_read_image();
@@ -16,7 +17,7 @@ void test_read_conv_weights();
 void test_read_linear();
 
 int main() {
-    test_read_linear();  // Change this to switch the entry point
+    test_average_pooling();  // Change this to switch the entry point
     return 0;
 }
 
@@ -100,7 +101,7 @@ void test_convolution() {
     free_tensor(&output_tensor);
 }
 
-void test_pooling() {
+void test_max_pooling() {
     printf("Test MaxPoolingWithCuda: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
@@ -153,6 +154,54 @@ void test_pooling() {
     // Free the image tensor memory
     free_tensor(&img_tensor);
     free_tensor(&output_tensor);
+}
+
+void test_average_pooling() {
+    printf("Test AveragePoolingWithCuda: \n\n");
+
+    // Variabiles to store the clock cicles used to mesure the execution time
+    time_t start;
+    time_t stop;
+    double elapsed_time;
+
+    // Set the parameters
+    int image_size = 6;
+    int num_channels = 3;
+
+    // Read the image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = image_size;
+    img_tensor.col = image_size;
+    img_tensor.depth = num_channels;
+    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
+    init_tensor(&img_tensor);
+
+    // Check img_tensor
+    printf("Image tensor:\n");
+    print_tensor(&img_tensor);
+
+    // GPU CONVOLUTION
+    // Declare the structure to store the output of the convolution with GPU
+    float* output_array = (float*)malloc(num_channels * sizeof(float));
+
+    start = clock();
+    // Perform convolution using GPU
+    cudaError_t cudaStatus = AveragePoolingWithCuda(&img_tensor, output_array);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "AveragePoolingWithCuda failed!");
+    }
+
+    // Check the results
+    for (int i = 0; i < num_channels; i++) {
+        printf("%f\n", output_array[i]);
+    }
+
+    // Free the image tensor memory
+    free_tensor(&img_tensor);
+    free(output_array);
 }
 
 void test_residual_connection() {

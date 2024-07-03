@@ -208,6 +208,82 @@ __global__ void max_pooling_parallel(float* input_tensor, int nrow, int ncol, in
 	}
 }
 
+cudaError_t AveragePoolingWithCuda(struct tensor* input_tensor, float* output_array) {
+	int nrow = input_tensor->row;
+	int ncol = input_tensor->col;
+	int nchannels = input_tensor->depth;
+
+	int memsize_input_tensor = nrow * ncol * nchannels * sizeof(float);
+	int memsize_output_tensor = nchannels * sizeof(float);
+
+	float* dev_input_data;
+	cudaMalloc((void**)&dev_input_data, memsize_input_tensor);
+	cudaMemcpy(dev_input_data, input_tensor->data, memsize_input_tensor, cudaMemcpyHostToDevice);
+
+	float* dev_output_data;
+	cudaMalloc((void**)&dev_output_data, memsize_output_tensor);
+
+	// Define CudaKernel settings.
+	dim3 threadInBlock(16, 16);
+	dim3 numBlocks;
+	numBlocks.x = (ncol + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (nrow + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = nchannels;
+	int memsize_shared_memory = threadInBlock.x * threadInBlock.y * sizeof(float);
+
+	average_pooling_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_input_data, nrow, ncol, nchannels, dev_output_data);
+
+	cudaError_t cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess) {
+		fprintf(stderr, "average_pooling_parallel() launch failed : % s\n", cudaGetErrorString(cudaStatus));
+	}
+
+	cudaMemcpy(output_array, dev_output_data, memsize_output_tensor, cudaMemcpyDeviceToHost);
+
+	cudaFree(dev_input_data);
+	cudaFree(dev_output_data);
+
+	return cudaStatus;
+}
+
+__global__ void average_pooling_parallel(float* input_tensor, int nrow, int ncol, int nchannels, float* output_tensor) {
+
+	extern __shared__ float shared_array[];
+
+	int row = blockIdx.y * blockDim.y + threadIdx.y;
+	int col = blockIdx.x * blockDim.x + threadIdx.x;
+	int channel = blockIdx.z;
+
+	int tid = threadIdx.y * blockDim.x + threadIdx.x;
+	
+	float result = 0.0f;
+
+	while (row < nrow) {
+		while (col < ncol) {
+			int img_idx = channel * nrow * ncol + row * ncol + col;
+			result += input_tensor[img_idx];
+			col += blockDim.x;
+		}
+		row += blockDim.y;
+	}
+	shared_array[tid] = result;
+
+	__syncthreads();
+
+	// Compute reduction
+	for (int s = (blockDim.x * blockDim.y) / 2; s > 0; s >>= 1) {
+		if (tid < s) {
+			shared_array[tid] += shared_array[tid + s];
+		}
+		__syncthreads();
+	}
+
+	if (tid == 0) {
+		int size = nrow * ncol;
+		output_tensor[channel] = shared_array[0] / ((float) size);
+	}
+}
+
 cudaError_t ResidualConnectionWithCuda(struct tensor* input_tensor1, struct tensor* input_tensor2, struct tensor* output_tensor) {
 	int nrow = input_tensor1->row;
 	int ncol = input_tensor1->col;
@@ -305,6 +381,7 @@ cudaError_t FullyConnectedLayerWithCuda(float* input_array, float* weights, floa
 
 	return cudaStatus;
 }
+
 __global__ void fully_connected_parallel(float* input_array, float* weights, float* bias, int input_size, int num_classes, float* output_array) {
 
 	extern __shared__ float shared_array[];

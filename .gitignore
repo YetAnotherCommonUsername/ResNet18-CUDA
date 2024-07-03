@@ -7,3 +7,4 @@
 *conv_weights*.bin
 *batch*.bin
 *linear*.bin
+*.ipch
