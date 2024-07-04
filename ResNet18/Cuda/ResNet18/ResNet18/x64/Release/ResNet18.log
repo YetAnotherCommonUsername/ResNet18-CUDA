@@ -1,18 +1,18 @@
 ﻿  Compiling CUDA source file bin_utils.cu...
-  Compiling CUDA source file model_utils.cu...
   Compiling CUDA source file kernel.cu...
+  Compiling CUDA source file model_utils.cu...
   Compiling CUDA source file jpg_utils.cu...
   Compiling CUDA source file tensor_utils.cu...
   
-  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\model_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu" 
   
   
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\jpg_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\jpg_utils.cu" 
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\model_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu" 
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\kernel.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu" 
   
-  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\tensor_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\tensor_utils.cu" 
-  
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\bin_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu" 
+  
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -IC:\opencv\build\include -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\tensor_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\tensor_utils.cu" 
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(5): warning #177-D: variable "i" was declared but never referenced
         int i, npixel;
             ^
@@ -51,20 +51,11 @@ C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_
         char buffer[200];
              ^
   
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(533): warning #177-D: variable "stride" was declared but never referenced
-    	int kernel_size = 3, stride = 1, pool_size = 3, num_classes = 1000;
-    	                     ^
-  
-  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
-  
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(533): warning #177-D: variable "pool_size" was declared but never referenced
-    	int kernel_size = 3, stride = 1, pool_size = 3, num_classes = 1000;
-    	                                 ^
-  
-  bin_utils.cu
   tensor_utils.cu
+  bin_utils.cu
   model_utils.cu
-  tmpxft_00003228_00000000-7_bin_utils.cudafe1.cpp
+  tmpxft_00003f84_00000000-7_tensor_utils.cudafe1.cpp
+  tmpxft_0000553c_00000000-7_bin_utils.cudafe1.cpp
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(5): warning C4101: 'npixel': variabile locale senza riferimenti
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(5): warning C4101: 'i': variabile locale senza riferimenti
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(6): warning C4101: 'buffer': variabile locale senza riferimenti
@@ -74,7 +65,6 @@ C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(66): warning C4101: 'npixel': variabile locale senza riferimenti
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(66): warning C4101: 'i': variabile locale senza riferimenti
 C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(67): warning C4101: 'buffer': variabile locale senza riferimenti
-  tmpxft_0000171c_00000000-7_tensor_utils.cudafe1.cpp
 C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::buildMaps" is only partially overridden in class "cv::detail::AffineWarper"
     class  AffineWarper : public PlaneWarper
            ^
@@ -83,33 +73,6 @@ C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-
   
 C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::warp" is only partially overridden in class "cv::detail::AffineWarper"
     class  AffineWarper : public PlaneWarper
-           ^
-  
-C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(100): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::FeatherBlender"
-    class  FeatherBlender : public Blender
-           ^
-  
-C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::MultiBandBlender"
-    class  MultiBandBlender : public Blender
-           ^
-  
-  tmpxft_00005bcc_00000000-7_model_utils.cudafe1.cpp
-C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::buildMaps" is only partially overridden in class "cv::detail::AffineWarper"
-    class  AffineWarper : public PlaneWarper
-           ^
-  
-  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
-  
-C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::warp" is only partially overridden in class "cv::detail::AffineWarper"
-    class  AffineWarper : public PlaneWarper
-           ^
-  
-C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(100): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::FeatherBlender"
-    class  FeatherBlender : public Blender
-           ^
-  
-C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::MultiBandBlender"
-    class  MultiBandBlender : public Blender
            ^
   
 C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::buildMaps" is only partially overridden in class "cv::detail::AffineWarper"
@@ -130,6 +93,15 @@ C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611
     class  MultiBandBlender : public Blender
            ^
   
+C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(100): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::FeatherBlender"
+    class  FeatherBlender : public Blender
+           ^
+  
+C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::MultiBandBlender"
+    class  MultiBandBlender : public Blender
+           ^
+  
+  tmpxft_000045a4_00000000-7_model_utils.cudafe1.cpp
 C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::buildMaps" is only partially overridden in class "cv::detail::AffineWarper"
     class  AffineWarper : public PlaneWarper
            ^
@@ -138,6 +110,24 @@ C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-
   
 C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::warp" is only partially overridden in class "cv::detail::AffineWarper"
     class  AffineWarper : public PlaneWarper
+           ^
+  
+C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::buildMaps" is only partially overridden in class "cv::detail::AffineWarper"
+    class  AffineWarper : public PlaneWarper
+           ^
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:/opencv/build/include\opencv2/stitching/detail/warpers.hpp(213): warning #611-D: overloaded virtual function "cv::detail::PlaneWarper::warp" is only partially overridden in class "cv::detail::AffineWarper"
+    class  AffineWarper : public PlaneWarper
+           ^
+  
+C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(100): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::FeatherBlender"
+    class  FeatherBlender : public Blender
+           ^
+  
+C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::MultiBandBlender"
+    class  MultiBandBlender : public Blender
            ^
   
 C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(100): warning #611-D: overloaded virtual function "cv::detail::Blender::prepare" is only partially overridden in class "cv::detail::FeatherBlender"
@@ -150,8 +140,8 @@ C:/opencv/build/include\opencv2/stitching/detail/blenders.hpp(127): warning #611
   
   jpg_utils.cu
   kernel.cu
-  tmpxft_00003298_00000000-7_jpg_utils.cudafe1.cpp
-  tmpxft_00006930_00000000-7_kernel.cudafe1.cpp
+  tmpxft_00003d80_00000000-7_jpg_utils.cudafe1.cpp
+  tmpxft_00001a54_00000000-7_kernel.cudafe1.cpp
      Creazione della libreria C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Release\ResNet18.lib e dell'oggetto C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Release\ResNet18.exp
 LINK : warning LNK4098: la libreria predefinita 'LIBCMT' è in conflitto con l'utilizzo di altre librerie; usare /NODEFAULTLIB:libreria
   LINK : è stata specificata l'opzione /LTCG ma non è richiesta la generazione del codice; rimuovere /LTCG dalla riga di comando del collegamento per migliorare le prestazioni del linker

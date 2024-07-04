@@ -8,11 +8,13 @@
 
 // Function prototypes for different mains
 void test_convolution();
+void test_convolution_with_weights();
 void test_max_pooling();
 void test_average_pooling();
 void test_residual_connection();
 void test_fully_connected();
 void test_relu();
+void test_batch_normalization();
 void test_read_image();
 void test_read_conv_weights();
 void test_read_linear();
@@ -34,10 +36,10 @@ void test_convolution() {
 
     // Set the parameters
     int image_size = 6;
-    int num_channels = 4;
+    int num_channels = 64;
     int kernel_size = 3;
     int num_filters = 2;
-    int stride = 2;
+    int stride = 1;
 
     // Read the image and store it in a tensor
     struct tensor img_tensor;
@@ -96,6 +98,73 @@ void test_convolution() {
     // Check the results
     print_tensor(&output_tensor);
 
+    // Free the image tensor memory
+    free_tensor(&img_tensor);
+    for (int i = 0; i < num_filters; i++) {
+        free_tensor(&kernels[i]);
+    }
+    free_tensor(&output_tensor);
+}
+
+void test_convolution_with_weights() {
+    printf("Test Conv2dWithCuda: \n\n");
+
+    // Variabiles to store the clock cicles used to mesure the execution time
+    time_t start;
+    time_t stop;
+    double elapsed_time;
+
+    // Set the parameters
+    int image_size = 224;
+    int num_channels = 3;
+    int kernel_size = 7;
+    int num_filters = 64;
+    int stride = 2;
+
+    // Read the image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = image_size;
+    img_tensor.col = image_size;
+    img_tensor.depth = num_channels;
+    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
+    init_random_tensor(&img_tensor);
+
+    // Declare the kernel
+    const char* filename = "./../../../Parameters/conv_weights_0.bin";
+
+    // Define the kernel tensor
+    struct tensor* kernels;
+    kernels = (struct tensor*)malloc(num_filters * sizeof(struct tensor));
+    load_conv_weights(filename, kernels, kernel_size, num_channels, num_filters);
+
+    print_tensor(&kernels[0]);
+    
+    // GPU CONVOLUTION
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor;
+    output_tensor.col = (img_tensor.col + stride - 1) / stride;
+    output_tensor.row = (img_tensor.row + stride - 1) / stride;
+    output_tensor.depth = num_filters;
+    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    start = clock();
+    // Perform convolution using GPU
+    cudaError_t cudaStatus = Conv2dWithCuda(&img_tensor, kernels, kernel_size, stride, num_filters, &output_tensor);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "Conv2dWithCuda failed!");
+    }
+
+    // Check the results
+    for (int i = 0; i < 10; i++) {
+        printf("%f\n", output_tensor.data[i]);
+    }
+    
     // Free the image tensor memory
     free_tensor(&img_tensor);
     for (int i = 0; i < num_filters; i++) {
@@ -391,6 +460,70 @@ void test_relu() {
     free_tensor(&output_tensor);
 }
 
+void test_batch_normalization() {
+    printf("Test BatchNormalizationWithCuda: \n\n");
+
+    // Variabiles to store the clock cicles used to mesure the execution time
+    time_t start;
+    time_t stop;
+    double elapsed_time;
+
+    // Set the parameters
+    int image_size = 224;
+    int num_channels = 3;
+    int num_filters = 64;
+
+    // Read the first image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = image_size;
+    img_tensor.col = image_size;
+    img_tensor.depth = num_channels;
+    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
+    init_random_tensor(&img_tensor);
+
+    float* conv1_batch1_beta, * conv1_batch1_gamma, * conv1_batch1_mean, * conv1_batch1_std;
+
+    conv1_batch1_beta = (float*)malloc(num_filters * sizeof(float));
+    load_array("./../../../Parameters/batch_beta_1.bin", conv1_batch1_beta, num_filters);
+    conv1_batch1_gamma = (float*)malloc(num_filters * sizeof(float));
+    load_array("./../../../Parameters/batch_gamma_1.bin", conv1_batch1_gamma, num_filters);
+    conv1_batch1_mean = (float*)malloc(num_filters * sizeof(float));
+    load_array("./../../../Parameters/batch_mean_1.bin", conv1_batch1_mean, num_filters);
+    conv1_batch1_std = (float*)malloc(num_filters * sizeof(float));
+    load_array("./../../../Parameters/batch_std_1.bin", conv1_batch1_std, num_filters);
+
+    // GPU CONVOLUTION
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor;
+    output_tensor.col = image_size;
+    output_tensor.row = image_size;
+    output_tensor.depth = num_channels;
+    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+
+    start = clock();
+    // Perform convolution using GPU
+    cudaError_t cudaStatus = BatchNormalizationWithCuda(&img_tensor, conv1_batch1_beta, conv1_batch1_gamma, conv1_batch1_mean, conv1_batch1_std, &output_tensor);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Batch normalization in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "BatchNormalizationWithCuda failed!");
+    }
+
+    // Check the results
+    int n = 10;
+    for (int i = 0; i < n; i++) {
+        printf("%f\n", output_tensor.data[i]);
+    }
+
+    // Free the image tensor memory
+    free_tensor(&img_tensor);
+    free_tensor(&output_tensor);
+}
+
 void test_read_image() {
     struct tensor img_tensor;
     const char* filename = "./../../../dog.jpg";
@@ -499,7 +632,7 @@ void classify_image() {
     img_tensor.col = image_size;
     img_tensor.depth = num_channels;
     img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
-    init_tensor(&img_tensor);
+    init_random_tensor(&img_tensor);
 
     // GPU CONVOLUTION
     // Declare the structure to store the output of the convolution with GPU
@@ -518,10 +651,15 @@ void classify_image() {
         fprintf(stderr, "ResNetWithCuda failed!");
     }
 
+    /*
     // Check the results
+    printf("Logit:");
     for (int i = 0; i < num_classes; i++) {
-        printf("%f\n", output_classes[i]);
+        if (output_classes[i] != 0.0) {
+            printf("Class: %d\tLogit:%f\n", i, output_classes[i]);
+        }
     }
+    */
 
     // Free the image tensor memory
     free_tensor(&img_tensor);

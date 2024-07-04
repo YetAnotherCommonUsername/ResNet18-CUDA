@@ -14,7 +14,8 @@ void init_tensor(struct tensor* t) {
 
     for (int i = 0; i < t->depth; i++) {
         for (int j = 0; j < num_elements; j++) {
-            t->data[i*num_elements + j] = (float)(i+1);
+            // t->data[i*num_elements + j] = (float)(i+1);
+            t->data[i * num_elements + j] = 0.5;
         }
     }
 }
