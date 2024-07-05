@@ -22,7 +22,7 @@ void test_read_batch_normalization();
 void classify_image();
 
 int main() {
-    classify_image();  // Change this to switch the entry point
+    test_convolution_with_weights();  // Change this to switch the entry point
     return 0;
 }
 
@@ -115,11 +115,11 @@ void test_convolution_with_weights() {
     double elapsed_time;
 
     // Set the parameters
-    int image_size = 224;
-    int num_channels = 3;
-    int kernel_size = 7;
-    int num_filters = 64;
-    int stride = 2;
+    int image_size = 28;
+    int num_channels = 128;
+    int kernel_size = 3;
+    int num_filters = 128;
+    int stride = 1;
 
     // Read the image and store it in a tensor
     struct tensor img_tensor;
@@ -130,7 +130,7 @@ void test_convolution_with_weights() {
     init_random_tensor(&img_tensor);
 
     // Declare the kernel
-    const char* filename = "./../../../Parameters/conv_weights_0.bin";
+    const char* filename = "./../../../Parameters/conv_weights_21.bin";
 
     // Define the kernel tensor
     struct tensor* kernels;
@@ -469,8 +469,8 @@ void test_batch_normalization() {
     double elapsed_time;
 
     // Set the parameters
-    int image_size = 224;
-    int num_channels = 3;
+    int image_size = 56;
+    int num_channels = 64;
     int num_filters = 64;
 
     // Read the first image and store it in a tensor
@@ -484,13 +484,13 @@ void test_batch_normalization() {
     float* conv1_batch1_beta, * conv1_batch1_gamma, * conv1_batch1_mean, * conv1_batch1_std;
 
     conv1_batch1_beta = (float*)malloc(num_filters * sizeof(float));
-    load_array("./../../../Parameters/batch_beta_1.bin", conv1_batch1_beta, num_filters);
+    load_array("./../../../Parameters/batch_beta_8.bin", conv1_batch1_beta, num_filters);
     conv1_batch1_gamma = (float*)malloc(num_filters * sizeof(float));
-    load_array("./../../../Parameters/batch_gamma_1.bin", conv1_batch1_gamma, num_filters);
+    load_array("./../../../Parameters/batch_gamma_8.bin", conv1_batch1_gamma, num_filters);
     conv1_batch1_mean = (float*)malloc(num_filters * sizeof(float));
-    load_array("./../../../Parameters/batch_mean_1.bin", conv1_batch1_mean, num_filters);
+    load_array("./../../../Parameters/batch_mean_8.bin", conv1_batch1_mean, num_filters);
     conv1_batch1_std = (float*)malloc(num_filters * sizeof(float));
-    load_array("./../../../Parameters/batch_std_1.bin", conv1_batch1_std, num_filters);
+    load_array("./../../../Parameters/batch_std_8.bin", conv1_batch1_std, num_filters);
 
     // GPU CONVOLUTION
     // Declare the structure to store the output of the convolution with GPU
@@ -539,11 +539,11 @@ void test_read_image() {
 
 void test_read_conv_weights() {
     // File to read
-    const char* filename = "./../../../Parameters/conv_weights_0.bin";
+    const char* filename = "./../../../Parameters/conv_weights_4.bin";
 
     // Define the size of the kernel
-    int kernel_size = 7;
-    int num_channels = 3;
+    int kernel_size = 3;
+    int num_channels = 64;
     int num_filters = 64;
 
     // Define the kernel tensor

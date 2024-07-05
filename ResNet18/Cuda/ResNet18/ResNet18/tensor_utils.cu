@@ -29,7 +29,7 @@ void init_random_tensor(struct tensor* t) {
 
     for (int i = 0; i < t->depth; i++) {
         for (int j = 0; j < num_elements; j++) {
-            t->data[i * num_elements + j] = static_cast<float>(rand()-rand()) / RAND_MAX;
+            t->data[i * num_elements + j] = static_cast<float>(rand()) / RAND_MAX;
         }
     }
 }

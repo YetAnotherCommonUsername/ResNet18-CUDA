@@ -621,31 +621,31 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	load_array("./../../../Parameters/batch_std_5.bin", conv2_batch1_std, num_filters2);
 
 	conv2_batch2_beta = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_beta_8.bin", conv2_batch1_beta, num_filters2);
+	load_array("./../../../Parameters/batch_beta_8.bin", conv2_batch2_beta, num_filters2);
 	conv2_batch2_gamma = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_gamma_8.bin", conv2_batch1_gamma, num_filters2);
+	load_array("./../../../Parameters/batch_gamma_8.bin", conv2_batch2_gamma, num_filters2);
 	conv2_batch2_mean = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_mean_8.bin", conv2_batch1_mean, num_filters2);
+	load_array("./../../../Parameters/batch_mean_8.bin", conv2_batch2_mean, num_filters2);
 	conv2_batch2_std = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_std_8.bin", conv2_batch1_std, num_filters2);
+	load_array("./../../../Parameters/batch_std_8.bin", conv2_batch2_std, num_filters2);
 
 	conv2_batch3_beta = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_beta_10.bin", conv2_batch1_beta, num_filters2);
+	load_array("./../../../Parameters/batch_beta_10.bin", conv2_batch3_beta, num_filters2);
 	conv2_batch3_gamma = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_gamma_10.bin", conv2_batch1_gamma, num_filters2);
+	load_array("./../../../Parameters/batch_gamma_10.bin", conv2_batch3_gamma, num_filters2);
 	conv2_batch3_mean = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_mean_10.bin", conv2_batch1_mean, num_filters2);
+	load_array("./../../../Parameters/batch_mean_10.bin", conv2_batch3_mean, num_filters2);
 	conv2_batch3_std = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_std_10.bin", conv2_batch1_std, num_filters2);
+	load_array("./../../../Parameters/batch_std_10.bin", conv2_batch3_std, num_filters2);
 
 	conv2_batch4_beta = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_beta_13.bin", conv2_batch1_beta, num_filters2);
+	load_array("./../../../Parameters/batch_beta_13.bin", conv2_batch4_beta, num_filters2);
 	conv2_batch4_gamma = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_gamma_13.bin", conv2_batch1_gamma, num_filters2);
+	load_array("./../../../Parameters/batch_gamma_13.bin", conv2_batch4_gamma, num_filters2);
 	conv2_batch4_mean = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_mean_13.bin", conv2_batch1_mean, num_filters2);
+	load_array("./../../../Parameters/batch_mean_13.bin", conv2_batch4_mean, num_filters2);
 	conv2_batch4_std = (float*)malloc(num_filters2 * sizeof(float));
-	load_array("./../../../Parameters/batch_std_13.bin", conv2_batch1_std, num_filters2);
+	load_array("./../../../Parameters/batch_std_13.bin", conv2_batch4_std, num_filters2);
 
 	// conv3_x
 	int memsize_conv3_1_weights = num_filters3 * num_filters2 * kernel_size * kernel_size * sizeof(float);
@@ -854,7 +854,9 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	cudaMalloc((void**)&dev_output_classes, num_classes * sizeof(float));
 
 	// Network architecture
-	// Layer 1: 
+	//=================================
+	//							 Layer 1 
+	//=================================
 	// Define the hyperparameters
 	int image_size = input_tensor->col;
 	int num_channel = input_tensor->depth;
@@ -933,24 +935,29 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 		printf("%f\n", output_data[i]);
 	}
 
-	// Layer 2: 
+	//=================================
+	//							 Layer 2 
+	//=================================
 	// Allocate device (GPU) memory for kernels and intermediate tensors
 	// Device memory for conv2_x_weights
 	float* dev_conv2_1_weights;
 	cudaMalloc((void**)&dev_conv2_1_weights, memsize_conv2_1_weights);
-	cudaMemcpy(dev_conv2_1_weights, conv2_1_weights, memsize_conv2_1_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv2_2_weights;
 	cudaMalloc((void**)&dev_conv2_2_weights, memsize_conv2_2_weights);
-	cudaMemcpy(dev_conv2_2_weights, conv2_2_weights, memsize_conv2_2_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv2_3_weights;
 	cudaMalloc((void**)&dev_conv2_3_weights, memsize_conv2_3_weights);
-	cudaMemcpy(dev_conv2_3_weights, conv2_3_weights, memsize_conv2_3_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv2_4_weights;
 	cudaMalloc((void**)&dev_conv2_4_weights, memsize_conv2_4_weights);
-	cudaMemcpy(dev_conv2_4_weights, conv2_4_weights, memsize_conv2_4_weights, cudaMemcpyHostToDevice);
+
+	for (int i = 0; i < num_filters2; i++) {
+		cudaMemcpy(dev_conv2_1_weights + i * kernel_size * kernel_size * num_filters1, conv2_1_weights[i].data, kernel_size * kernel_size * num_filters1 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv2_2_weights + i * kernel_size * kernel_size * num_filters2, conv2_2_weights[i].data, kernel_size * kernel_size * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv2_3_weights + i * kernel_size * kernel_size * num_filters2, conv2_3_weights[i].data, kernel_size * kernel_size * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv2_4_weights + i * kernel_size * kernel_size * num_filters2, conv2_4_weights[i].data, kernel_size * kernel_size * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
+	}
 
 	// Device memory for BatchNorm
 	int memsize_conv2_batch = num_filters2 * sizeof(float);
@@ -1023,7 +1030,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	cudaMemcpy(dev_conv2_batch4_std, conv2_batch4_std, memsize_conv2_batch, cudaMemcpyHostToDevice);
 
 	// Device memory for intermediate tensors
-	memsize_output_data = num_filters2 * image_size * image_size * sizeof(float);
+	memsize_output_data = num_filters2 * (image_size/2) * (image_size/2) * sizeof(float);
 	float* dev_layer2_output_data1;
 	cudaMalloc((void**)&dev_layer2_output_data1, memsize_output_data);
 
@@ -1037,19 +1044,19 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	// MaxPool
 	max_pooling_parallel << <numBlocks, threadInBlock >> > (dev_layer1_output_data1, image_size, image_size, num_filters1, pool_size, stride, dev_layer2_output_data1);
 
-	printf("Debug:\n");
-	cudaMemcpy(output_data, dev_layer2_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
-	}
-
 	// Identity block 1
 	// Define CudaKernel settings
 	image_size = image_size / 2;
+	threadInBlock.x = 16;
+	threadInBlock.y = 16;
+	threadInBlock.z = 1;
+	numBlocks.x = (image_size + threadInBlock.x - 1) / threadInBlock.x;
+	numBlocks.y = (image_size + threadInBlock.y - 1) / threadInBlock.y;
+	numBlocks.z = num_filters2;
 
 	// ReLU (residual connection)
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data1, image_size, image_size, dev_layer2_output_data3);
-	
+
 	// Define CudaKernel settings
 	threadInBlock.x = 8;
 	threadInBlock.y = 8;
@@ -1069,12 +1076,6 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	numBlocks.x = (image_size + threadInBlock.x - 1) / threadInBlock.x;
 	numBlocks.y = (image_size + threadInBlock.y - 1) / threadInBlock.y;
 	numBlocks.z = num_filters2;
-
-	printf("Debug:\n");
-	cudaMemcpy(output_data, dev_layer2_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
-	}
 
 	// BatchNorm
 	batch_normalization_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data2, image_size, image_size, dev_conv2_batch1_beta, dev_conv2_batch1_gamma, dev_conv2_batch1_mean, dev_conv2_batch1_std, dev_layer2_output_data1);
@@ -1104,7 +1105,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 
 	// BatchNorm
 	batch_normalization_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data1, image_size, image_size, dev_conv2_batch2_beta, dev_conv2_batch2_gamma, dev_conv2_batch2_mean, dev_conv2_batch2_std, dev_layer2_output_data2);
-	
+
 	// ResidualConnection
 	add_tensors_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data2, dev_layer2_output_data3, image_size, image_size, dev_layer2_output_data1);
 
@@ -1183,28 +1184,33 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 		printf("%f\n", output_data[i]);
 	}
 
-	// Layer 3: 
+	//=================================
+	//							 Layer 3 
+	//=================================
 	// Allocate device (GPU) memory for kernels and intermediate tensors
 	// Device memory for conv3_x_weights
 	float* dev_conv3_1_weights;
 	cudaMalloc((void**)&dev_conv3_1_weights, memsize_conv3_1_weights);
-	cudaMemcpy(dev_conv3_1_weights, conv3_1_weights, memsize_conv3_1_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv3_2_weights;
 	cudaMalloc((void**)&dev_conv3_2_weights, memsize_conv3_2_weights);
-	cudaMemcpy(dev_conv3_2_weights, conv3_2_weights, memsize_conv3_2_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv3_3_weights;
 	cudaMalloc((void**)&dev_conv3_3_weights, memsize_conv3_3_weights);
-	cudaMemcpy(dev_conv3_3_weights, conv3_3_weights, memsize_conv3_3_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv3_4_weights;
 	cudaMalloc((void**)&dev_conv3_4_weights, memsize_conv3_4_weights);
-	cudaMemcpy(dev_conv3_4_weights, conv3_4_weights, memsize_conv3_4_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv3_5_weights;
 	cudaMalloc((void**)&dev_conv3_5_weights, memsize_conv3_5_weights);
-	cudaMemcpy(dev_conv3_5_weights, conv3_5_weights, memsize_conv3_5_weights, cudaMemcpyHostToDevice);
+
+	for (int i = 0; i < num_filters3; i++) {
+		cudaMemcpy(dev_conv3_1_weights + i * kernel_size * kernel_size * num_filters2, conv3_1_weights[i].data, kernel_size * kernel_size * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv3_2_weights + i * kernel_size * kernel_size * num_filters3, conv3_2_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv3_3_weights + i * 1 * 1 * num_filters3, conv3_3_weights[i].data, 1 * 1 * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv3_4_weights + i * kernel_size * kernel_size * num_filters3, conv3_4_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv3_5_weights + i * kernel_size * kernel_size * num_filters3, conv3_5_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+	}
 
 	// Device memory for BatchNorm
 	int memsize_conv3_batch = num_filters3 * sizeof(float);
@@ -1391,8 +1397,20 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	numBlocks.z = num_filters3;
 	memsize_shared_memory = threadInBlock.x * threadInBlock.y * threadInBlock.z * sizeof(float);
 
+	printf("Debug:\n");
+	cudaMemcpy(output_data, dev_conv3_4_weights, n * sizeof(float), cudaMemcpyDeviceToHost);
+	for (int i = 0; i < n; i++) {
+		printf("%f\n", output_data[i]);
+	}
+
 	// conv3_4
 	convolution_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_layer3_output_data1, image_size, image_size, num_filters3, dev_conv3_4_weights, kernel_size, 1, dev_layer3_output_data2);
+
+	printf("Debug:\n");
+	cudaMemcpy(output_data, dev_layer3_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
+	for (int i = 0; i < n; i++) {
+		printf("%f\n", output_data[i]);
+	}
 
 	// Define CudaKernel settings
 	threadInBlock.x = 16;
@@ -1444,28 +1462,33 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 		printf("%f\n", output_data[i]);
 	}
 
-	// Layer 4: 
+	//=================================
+	//							 Layer 4 
+	//=================================
 	// Allocate device (GPU) memory for kernels and intermediate tensors
 	// Device memory for conv3_x_weights
 	float* dev_conv4_1_weights;
 	cudaMalloc((void**)&dev_conv4_1_weights, memsize_conv4_1_weights);
-	cudaMemcpy(dev_conv4_1_weights, conv4_1_weights, memsize_conv4_1_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv4_2_weights;
 	cudaMalloc((void**)&dev_conv4_2_weights, memsize_conv4_2_weights);
-	cudaMemcpy(dev_conv4_2_weights, conv4_2_weights, memsize_conv4_2_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv4_3_weights;
 	cudaMalloc((void**)&dev_conv4_3_weights, memsize_conv4_3_weights);
-	cudaMemcpy(dev_conv4_3_weights, conv4_3_weights, memsize_conv4_3_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv4_4_weights;
 	cudaMalloc((void**)&dev_conv4_4_weights, memsize_conv4_4_weights);
-	cudaMemcpy(dev_conv4_4_weights, conv4_4_weights, memsize_conv4_4_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv4_5_weights;
 	cudaMalloc((void**)&dev_conv4_5_weights, memsize_conv4_5_weights);
-	cudaMemcpy(dev_conv4_5_weights, conv4_5_weights, memsize_conv4_5_weights, cudaMemcpyHostToDevice);
+
+	for (int i = 0; i < num_filters4; i++) {
+		cudaMemcpy(dev_conv4_1_weights + i * kernel_size * kernel_size * num_filters3, conv4_1_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv4_2_weights + i * kernel_size * kernel_size * num_filters4, conv4_2_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv4_3_weights + i * 1 * 1 * num_filters4, conv4_3_weights[i].data, 1 * 1 * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv4_4_weights + i * kernel_size * kernel_size * num_filters4, conv4_4_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv4_5_weights + i * kernel_size * kernel_size * num_filters4, conv4_5_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+	}
 
 	// Device memory for BatchNorm
 	int memsize_conv4_batch = num_filters4 * sizeof(float);
@@ -1705,28 +1728,33 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 		printf("%f\n", output_data[i]);
 	}
 
-	// Layer 5: 
+	//=================================
+	//							 Layer 5 
+	//=================================
 	// Allocate device (GPU) memory for kernels and intermediate tensors
 	// Device memory for conv5_x_weights
 	float* dev_conv5_1_weights;
 	cudaMalloc((void**)&dev_conv5_1_weights, memsize_conv5_1_weights);
-	cudaMemcpy(dev_conv5_1_weights, conv5_1_weights, memsize_conv5_1_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv5_2_weights;
 	cudaMalloc((void**)&dev_conv5_2_weights, memsize_conv5_2_weights);
-	cudaMemcpy(dev_conv5_2_weights, conv5_2_weights, memsize_conv5_2_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv5_3_weights;
 	cudaMalloc((void**)&dev_conv5_3_weights, memsize_conv5_3_weights);
-	cudaMemcpy(dev_conv5_3_weights, conv5_3_weights, memsize_conv5_3_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv5_4_weights;
 	cudaMalloc((void**)&dev_conv5_4_weights, memsize_conv5_4_weights);
-	cudaMemcpy(dev_conv5_4_weights, conv5_4_weights, memsize_conv5_4_weights, cudaMemcpyHostToDevice);
 
 	float* dev_conv5_5_weights;
 	cudaMalloc((void**)&dev_conv5_5_weights, memsize_conv5_5_weights);
-	cudaMemcpy(dev_conv5_5_weights, conv5_5_weights, memsize_conv5_5_weights, cudaMemcpyHostToDevice);
+
+	for (int i = 0; i < num_filters5; i++) {
+		cudaMemcpy(dev_conv5_1_weights + i * kernel_size * kernel_size * num_filters4, conv5_1_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv5_2_weights + i * kernel_size * kernel_size * num_filters5, conv5_2_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv5_3_weights + i * 1 * 1 * num_filters5, conv5_3_weights[i].data, 1 * 1 * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv5_4_weights + i * kernel_size * kernel_size * num_filters5, conv5_4_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv5_5_weights + i * kernel_size * kernel_size * num_filters5, conv5_5_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
+	}
 
 	// Device memory for BatchNorm
 	int memsize_conv5_batch = num_filters5 * sizeof(float);
