@@ -32,4 +32,6 @@ __global__ void relu_parallel(float* input_tensor, int nrow, int ncol, float* ou
 cudaError_t BatchNormalizationWithCuda(struct tensor* input_tensor, float* beta, float* gamma, float* mean, float* std, struct tensor* output_tensor);
 __global__ void batch_normalization_parallel(float* input_tensor, int nrow, int ncol, float* beta, float* gamma, float* mean, float* std, float* output_tensor);
 
+__global__ void softmax_layer_parallel(float* logits, int num_classes, float* probabilities);
+
 cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes);

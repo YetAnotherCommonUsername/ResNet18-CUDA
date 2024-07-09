@@ -1,6 +1,118 @@
-﻿  Compiling CUDA source file kernel.cu...
+﻿  Compiling CUDA source file bin_utils.cu...
+  Compiling CUDA source file model_utils.cu...
+  Compiling CUDA source file jpg_utils.cu...
+  Compiling CUDA source file kernel.cu...
+  Compiling CUDA source file tensor_utils.cu...
+  
   
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Debug\kernel.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu" 
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Debug\model_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu" 
+  
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Debug\jpg_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\jpg_utils.cu" 
+  
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Debug\tensor_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\tensor_utils.cu" 
+  
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"  -G   --keep-dir x64\Debug  -maxrregcount=0   --machine 64 --compile -cudart static  -g  -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -Xcompiler "/Fdx64\Debug\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Debug\bin_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu" 
+  jpg_utils.cu
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(7): warning #177-D: variable "i" was declared but never referenced
+        int i, npixel;
+            ^
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(7): warning #177-D: variable "npixel" was declared but never referenced
+        int i, npixel;
+               ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(8): warning #177-D: variable "buffer" was declared but never referenced
+        char buffer[200];
+             ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(40): warning #177-D: variable "i" was declared but never referenced
+        int i, npixel;
+            ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(40): warning #177-D: variable "npixel" was declared but never referenced
+        int i, npixel;
+               ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(41): warning #177-D: variable "buffer" was declared but never referenced
+        char buffer[200];
+             ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(68): warning #177-D: variable "i" was declared but never referenced
+        int i, npixel;
+            ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(68): warning #177-D: variable "npixel" was declared but never referenced
+        int i, npixel;
+               ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(69): warning #177-D: variable "buffer" was declared but never referenced
+        char buffer[200];
+             ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(150): warning #177-D: variable "i" was declared but never referenced
+        int i, npixel;
+            ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(150): warning #177-D: variable "npixel" was declared but never referenced
+        int i, npixel;
+               ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(151): warning #177-D: variable "buffer" was declared but never referenced
+        char buffer[200];
+             ^
+  
+  tensor_utils.cu
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(617): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        char* filename = "./../../dog.bin";
+                         ^
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(653): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        char* filename = "./../../dog.bin";
+                         ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(687): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        filename = "./../../imagenet_classes.txt";
+                 ^
+  
+  bin_utils.cu
+  model_utils.cu
+  tmpxft_00000724_00000000-7_jpg_utils.cudafe1.cpp
+  tmpxft_00003d2c_00000000-7_tensor_utils.cudafe1.cpp
+  tmpxft_000022e0_00000000-7_bin_utils.cudafe1.cpp
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(7): warning C4101: 'npixel': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(7): warning C4101: 'i': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(8): warning C4101: 'buffer': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(40): warning C4101: 'npixel': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(40): warning C4101: 'i': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(41): warning C4101: 'buffer': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(68): warning C4101: 'npixel': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(68): warning C4101: 'i': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(69): warning C4101: 'buffer': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(150): warning C4101: 'npixel': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(150): warning C4101: 'i': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu(151): warning C4101: 'buffer': variabile locale senza riferimenti
+  tmpxft_00004218_00000000-7_model_utils.cudafe1.cpp
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(617): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        char* filename = "./../../dog.bin";
+                         ^
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(653): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        char* filename = "./../../dog.bin";
+                         ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(687): warning #2464-D: conversion from a string literal to "char *" is deprecated
+        filename = "./../../imagenet_classes.txt";
+                 ^
+  
   kernel.cu
-  tmpxft_00004bcc_00000000-7_kernel.cudafe1.cpp
+  tmpxft_00004c5c_00000000-7_kernel.cudafe1.cpp
+     Creazione della libreria C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Debug\ResNet18.lib e dell'oggetto C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Debug\ResNet18.exp
+LINK : warning LNK4098: la libreria predefinita 'LIBCMT' è in conflitto con l'utilizzo di altre librerie; usare /NODEFAULTLIB:libreria
   ResNet18.vcxproj -> C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Debug\ResNet18.exe

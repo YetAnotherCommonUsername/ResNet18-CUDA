@@ -4,8 +4,6 @@
 
 void load_conv_weights(const char* filename, struct tensor* kernels, int kernel_size, int num_channels, int num_filters) {
     FILE* fin;
-    int i, npixel;
-    char buffer[200];
 
     fin = fopen(filename, "rb");
     if (fin == NULL) {
@@ -37,8 +35,6 @@ void load_conv_weights(const char* filename, struct tensor* kernels, int kernel_
 
 void load_matrix(const char* filename, float* weights, int ncol, int nrow) {
     FILE* fin;
-    int i, npixel;
-    char buffer[200];
 
     fin = fopen(filename, "rb");
     if (fin == NULL) {
@@ -65,8 +61,6 @@ void load_matrix(const char* filename, float* weights, int ncol, int nrow) {
 
 void load_array(const char* filename, float* weights, int size) {
     FILE* fin;
-    int i, npixel;
-    char buffer[200];
 
     fin = fopen(filename, "rb");
     if (fin == NULL) {
@@ -147,8 +141,6 @@ char** load_classes(const char* filename, int num_classes) {
 
 void load_image_as_tensor(const char* filename, struct tensor* img_tensor) {
     FILE* fin;
-    int i, npixel;
-    char buffer[200];
 
     fin = fopen(filename, "rb");
     if (fin == NULL) {

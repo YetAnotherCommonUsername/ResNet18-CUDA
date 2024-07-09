@@ -22,10 +22,10 @@ void test_read_conv_weights();
 void test_read_linear();
 void test_read_batch_normalization();
 void test_read_image();
-void classify_image();
+void classify_image_parallel();
 
 int main() {
-    classify_image();  // Change this to switch the entry point
+    classify_image_parallel();  // Change this to switch the entry point
     return 0;
 }
 
@@ -592,7 +592,7 @@ void test_read_linear() {
 
 void test_read_batch_normalization() {
     // File to read
-    const char* filename = "./../../Parameters/batch_mean_46.bin";
+    const char* filename = "./../../../Parameters/batch_mean_46.bin";
 
     // Define the size of the kernel
     int size = 64;
@@ -631,7 +631,7 @@ void test_read_image() {
     free_tensor(&img_tensor);
 }
 
-void classify_image() {
+void classify_image_parallel() {
 
     // Check the working directory
     char cwd[1000];
@@ -642,7 +642,7 @@ void classify_image() {
         printf("GetCurrentDirectory() error: %lu\n", GetLastError());
     }
 
-    printf("Classify image: \n\n");
+    printf("Classify image dog.bin: \n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -666,7 +666,10 @@ void classify_image() {
 
     load_image_as_tensor(filename, &img_tensor);
 
-    // GPU CONVOLUTION
+    printf("Image read succesfully\n");
+    printf("Image size: %d, %d, %d\n", img_tensor.depth, img_tensor.row, img_tensor.col);
+
+    // ResNet (GPU)
     // Declare the structure to store the output of the convolution with GPU
     float* output_classes;
     output_classes = (float*)malloc(num_classes * sizeof(float));
@@ -674,7 +677,7 @@ void classify_image() {
     memset(output_classes, 0, num_classes * sizeof(float));
 
     start = clock();
-    // Perform convolution using GPU
+    // Perform ResNet18 using GPU
     cudaError_t cudaStatus = ResNetWithCuda(&img_tensor, output_classes);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
@@ -686,7 +689,6 @@ void classify_image() {
     // Read the classes
     filename = "./../../../imagenet_classes.txt";
 
-    // Read the file into an array of strings
     char** classes = load_classes(filename, num_classes);
     if (classes == NULL) {
         exit(-1);
@@ -695,27 +697,27 @@ void classify_image() {
     // Check the results
     // Array to store the top 5 values and their indices
     int top = 5;
-    float* topValues = (float*)malloc(top * sizeof(float));
-    int* topIndices = (int*)malloc(top * sizeof(int));
+    float* top_prob = (float*)malloc(top * sizeof(float));
+    int* top_idx = (int*)malloc(top * sizeof(int));
 
     // Initialize the top values to the lowest possible float
     for (int i = 0; i < top; i++) {
-        topValues[i] = -FLT_MAX;
-        topIndices[i] = -1;
+        top_prob[i] = -FLT_MAX;
+        top_idx[i] = -1;
     }
 
     // Find the top 5 values and their indices
     for (int i = 0; i < num_classes; i++) {
         for (int j = 0; j < top; j++) {
-            if (output_classes[i] > topValues[j]) {
+            if (output_classes[i] > top_prob[j]) {
                 // Shift the current values down
                 for (int k = (top - 1); k > j; k--) {
-                    topValues[k] = topValues[k - 1];
-                    topIndices[k] = topIndices[k - 1];
+                    top_prob[k] = top_prob[k - 1];
+                    top_idx[k] = top_idx[k - 1];
                 }
                 // Insert the new value
-                topValues[j] = output_classes[i];
-                topIndices[j] = i;
+                top_prob[j] = output_classes[i];
+                top_idx[j] = i;
                 break;
             }
         }
@@ -724,8 +726,8 @@ void classify_image() {
     // Print the top 5 values and their indices
     printf("Top 5 values and their indices:\n");
     for (int i = 0; i < top; i++) {
-        if (topIndices[i] != -1) {
-            printf("Class: %s\tValue:%f\n", classes[topIndices[i]], topValues[i]);
+        if (top_idx[i] != -1) {
+            printf("Class: %s\tValue:%f\n", classes[top_idx[i]], top_prob[i]);
         }
     }
 
