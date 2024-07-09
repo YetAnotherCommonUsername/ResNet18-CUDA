@@ -532,7 +532,7 @@ __global__ void batch_normalization_parallel(float* input_tensor, int nrow, int 
 	int tid = channel * nrow * ncol + row * ncol + col;
 
 	if (row < nrow && col < ncol) {
-		output_tensor[tid] = gamma[channel] * (input_tensor[tid] - mean[channel])/std[channel] + beta[channel];
+		output_tensor[tid] = gamma[channel] * (input_tensor[tid] - mean[channel])/sqrtf(std[channel]) + beta[channel];
 	}
 }
 
@@ -540,6 +540,11 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	// Dimensions and sizes based on ResNet18 architecture
 	int num_filters1 = 64, num_filters2 = 64, num_filters3 = 128, num_filters4 = 256, num_filters5 = 512;
 	int kernel_size = 3, stride = 2, pool_size = 3, num_classes = 1000;
+
+	// Debug
+	bool debug = true;
+	float* debug_data; 
+	int memsize_debug;
 
 	// Allocate memory for weights and biases
 	// conv1
@@ -927,12 +932,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer1_output_data2, image_size, image_size, dev_layer1_output_data1);
 
 	// Debug
-	printf("Layer 1:\n");
-	int n = 25;
-	float* output_data = (float*)malloc(n * sizeof(float));
-	cudaMemcpy(output_data, dev_layer1_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters1 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer1_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters1; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 1:\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	//=================================
@@ -1113,10 +1129,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data1, image_size, image_size, dev_layer2_output_data2);
 
 	// Debug
-	printf("Layer 2 - Identity block 1:\n");
-	cudaMemcpy(output_data, dev_layer2_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters2 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer2_output_data2, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters2; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 2 (Identity block 1):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	// Identity block 2
@@ -1178,10 +1207,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer2_output_data2, image_size, image_size, dev_layer2_output_data1);
 
 	// Debug
-	printf("Layer 2 - Identity block 2:\n");
-	cudaMemcpy(output_data, dev_layer2_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters2 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer2_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters2; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 2 (Identity block 2):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	//=================================
@@ -1207,7 +1249,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	for (int i = 0; i < num_filters3; i++) {
 		cudaMemcpy(dev_conv3_1_weights + i * kernel_size * kernel_size * num_filters2, conv3_1_weights[i].data, kernel_size * kernel_size * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv3_2_weights + i * kernel_size * kernel_size * num_filters3, conv3_2_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(dev_conv3_3_weights + i * 1 * 1 * num_filters3, conv3_3_weights[i].data, 1 * 1 * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv3_3_weights + i * 1 * 1 * num_filters2, conv3_3_weights[i].data, 1 * 1 * num_filters2 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv3_4_weights + i * kernel_size * kernel_size * num_filters3, conv3_4_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv3_5_weights + i * kernel_size * kernel_size * num_filters3, conv3_5_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
 	}
@@ -1310,6 +1352,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	// Intermediate tensors for residual connections
 	float* dev_layer3_output_data3;
 	cudaMalloc((void**)&dev_layer3_output_data3, memsize_output_data);
+	cudaMemset(&dev_layer3_output_data3, 0, memsize_output_data);
 
 	float* dev_layer3_output_data4;
 	cudaMalloc((void**)&dev_layer3_output_data4, memsize_output_data);
@@ -1326,6 +1369,29 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 
 	// conv3_1
 	convolution_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_layer2_output_data1, image_size, image_size, num_filters2, dev_conv3_1_weights, kernel_size, stride, dev_layer3_output_data1);
+
+	// Debug pesi
+	memsize_debug = 1 * 1 * 64 * 128 * sizeof(float);
+	debug_data = (float*)malloc(memsize_debug);
+	cudaMemcpy(debug_data, dev_conv3_3_weights, memsize_debug, cudaMemcpyDeviceToHost);
+	float max = FLT_MIN;
+	int max_idx = 0;
+	float min = FLT_MAX;
+	int min_idx = 0;
+	for (int i = 0; i < 1 * 1 * 64 * 128; i++) {
+		if (debug_data[i] > max) {
+			max = debug_data[i];
+			max_idx = i;
+		}
+		if (debug_data[i] < min) {
+			min = debug_data[i];
+			min_idx = i;
+		}
+	}
+
+	printf("Debug  weights:\n");
+	printf("Max value (%d): %f\n", max_idx,  max);
+	printf("Min value (%d): %f\n", min_idx, min);
 
 	// conv3_3 (residual connection)
 	convolution_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_layer2_output_data1, image_size, image_size, num_filters2, dev_conv3_3_weights, 1, stride, dev_layer3_output_data3);
@@ -1378,10 +1444,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer3_output_data2, image_size, image_size, dev_layer3_output_data1);
 
 	// Debug
-	printf("Layer 3 - Convolution block:\n");
-	cudaMemcpy(output_data, dev_layer3_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters3 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer3_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters3; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 3 (Convolution block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	// Identity block
@@ -1397,20 +1476,8 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	numBlocks.z = num_filters3;
 	memsize_shared_memory = threadInBlock.x * threadInBlock.y * threadInBlock.z * sizeof(float);
 
-	printf("Debug:\n");
-	cudaMemcpy(output_data, dev_conv3_4_weights, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
-	}
-
 	// conv3_4
 	convolution_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_layer3_output_data1, image_size, image_size, num_filters3, dev_conv3_4_weights, kernel_size, 1, dev_layer3_output_data2);
-
-	printf("Debug:\n");
-	cudaMemcpy(output_data, dev_layer3_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
-	}
 
 	// Define CudaKernel settings
 	threadInBlock.x = 16;
@@ -1452,14 +1519,46 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	// ResidualConnection
 	add_tensors_parallel << <numBlocks, threadInBlock >> > (dev_layer3_output_data2, dev_layer2_output_data3, image_size, image_size, dev_layer3_output_data1);
 
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters3 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer3_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters3; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Debug:\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
+	}
+
 	// ReLU
-	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer3_output_data1, image_size, image_size, dev_layer2_output_data2);
+	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer3_output_data1, image_size, image_size, dev_layer3_output_data2);
 
 	// Debug
-	printf("Layer 3 - Identity block:\n");
-	cudaMemcpy(output_data, dev_layer3_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters3 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer3_output_data2, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters3; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 3 (Identity block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	//=================================
@@ -1485,7 +1584,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	for (int i = 0; i < num_filters4; i++) {
 		cudaMemcpy(dev_conv4_1_weights + i * kernel_size * kernel_size * num_filters3, conv4_1_weights[i].data, kernel_size * kernel_size * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv4_2_weights + i * kernel_size * kernel_size * num_filters4, conv4_2_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(dev_conv4_3_weights + i * 1 * 1 * num_filters4, conv4_3_weights[i].data, 1 * 1 * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv4_3_weights + i * 1 * 1 * num_filters3, conv4_3_weights[i].data, 1 * 1 * num_filters3 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv4_4_weights + i * kernel_size * kernel_size * num_filters4, conv4_4_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv4_5_weights + i * kernel_size * kernel_size * num_filters4, conv4_5_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
 	}
@@ -1656,10 +1755,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer4_output_data2, image_size, image_size, dev_layer4_output_data1);
 
 	// Debug
-	printf("Layer 4 - Convolution block:\n");
-	cudaMemcpy(output_data, dev_layer4_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters4 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer4_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters4; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 4 (Convolution block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	// Identity block
@@ -1722,10 +1834,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer4_output_data1, image_size, image_size, dev_layer4_output_data2);
 
 	// Debug
-	printf("Layer 4 - Identity block:\n");
-	cudaMemcpy(output_data, dev_layer4_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters4 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer4_output_data2, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters4; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 4 (Identity block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	//=================================
@@ -1751,7 +1876,7 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	for (int i = 0; i < num_filters5; i++) {
 		cudaMemcpy(dev_conv5_1_weights + i * kernel_size * kernel_size * num_filters4, conv5_1_weights[i].data, kernel_size * kernel_size * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv5_2_weights + i * kernel_size * kernel_size * num_filters5, conv5_2_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
-		cudaMemcpy(dev_conv5_3_weights + i * 1 * 1 * num_filters5, conv5_3_weights[i].data, 1 * 1 * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
+		cudaMemcpy(dev_conv5_3_weights + i * 1 * 1 * num_filters4, conv5_3_weights[i].data, 1 * 1 * num_filters4 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv5_4_weights + i * kernel_size * kernel_size * num_filters5, conv5_4_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
 		cudaMemcpy(dev_conv5_5_weights + i * kernel_size * kernel_size * num_filters5, conv5_5_weights[i].data, kernel_size * kernel_size * num_filters5 * sizeof(float), cudaMemcpyHostToDevice);
 	}
@@ -1923,10 +2048,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer5_output_data2, image_size, image_size, dev_layer5_output_data1);
 
 	// Debug
-	printf("Layer 5 - Convolution block:\n");
-	cudaMemcpy(output_data, dev_layer5_output_data1, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters5 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer5_output_data1, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters5; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 5 (Convolution block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	// Identity block
@@ -1989,10 +2127,23 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 	relu_parallel << <numBlocks, threadInBlock >> > (dev_layer5_output_data1, image_size, image_size, dev_layer5_output_data2);
 
 	// Debug
-	printf("Layer 5 - Identity block:\n");
-	cudaMemcpy(output_data, dev_layer5_output_data2, n * sizeof(float), cudaMemcpyDeviceToHost);
-	for (int i = 0; i < n; i++) {
-		printf("%f\n", output_data[i]);
+	if (debug) {
+		memsize_debug = image_size * image_size * num_filters5 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_layer5_output_data2, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < image_size * image_size * num_filters5; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Output layer 5 (Identity block):\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
 	}
 
 	// Final average pooling and fully connected layer
@@ -2023,6 +2174,26 @@ cudaError_t ResNetWithCuda(struct tensor* input_tensor, float* output_classes) {
 
 	// AveragePool
 	average_pooling_parallel << <numBlocks, threadInBlock, memsize_shared_memory >> > (dev_layer5_output_data2, image_size, image_size, num_filters5, dev_flatten_data);
+
+	// Debug
+	if (debug) {
+		memsize_debug = num_filters5 * sizeof(float);
+		debug_data = (float*)malloc(memsize_debug);
+		cudaMemcpy(debug_data, dev_flatten_data, memsize_debug, cudaMemcpyDeviceToHost);
+		float max = FLT_MIN;
+		float min = FLT_MAX;
+		for (int i = 0; i < num_filters5; i++) {
+			if (debug_data[i] > max) {
+				max = debug_data[i];
+			}
+			if (debug_data[i] < min) {
+				min = debug_data[i];
+			}
+		}
+		printf("Average pooling layer:\n");
+		printf("Max value: %f\n", max);
+		printf("Min value: %f\n", min);
+	}
 
 	// Define CudaKernel settings
 	int num_blocks = num_classes;

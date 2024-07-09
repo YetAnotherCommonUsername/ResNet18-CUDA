@@ -4,7 +4,10 @@
 #include "model_utils.cuh"
 #include "bin_utils.cuh"
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
+#include <windows.h>
+#include <float.h>
 
 // Function prototypes for different mains
 void test_convolution();
@@ -15,14 +18,14 @@ void test_residual_connection();
 void test_fully_connected();
 void test_relu();
 void test_batch_normalization();
-void test_read_image();
 void test_read_conv_weights();
 void test_read_linear();
 void test_read_batch_normalization();
+void test_read_image();
 void classify_image();
 
 int main() {
-    test_convolution_with_weights();  // Change this to switch the entry point
+    classify_image();  // Change this to switch the entry point
     return 0;
 }
 
@@ -36,7 +39,7 @@ void test_convolution() {
 
     // Set the parameters
     int image_size = 6;
-    int num_channels = 64;
+    int num_channels = 128;
     int kernel_size = 3;
     int num_filters = 2;
     int stride = 1;
@@ -115,11 +118,11 @@ void test_convolution_with_weights() {
     double elapsed_time;
 
     // Set the parameters
-    int image_size = 28;
-    int num_channels = 128;
-    int kernel_size = 3;
+    int image_size = 56;
+    int num_channels = 64;
+    int kernel_size = 1;
     int num_filters = 128;
-    int stride = 1;
+    int stride = 2;
 
     // Read the image and store it in a tensor
     struct tensor img_tensor;
@@ -127,10 +130,10 @@ void test_convolution_with_weights() {
     img_tensor.col = image_size;
     img_tensor.depth = num_channels;
     img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
-    init_random_tensor(&img_tensor);
+    init_tensor(&img_tensor);
 
     // Declare the kernel
-    const char* filename = "./../../../Parameters/conv_weights_21.bin";
+    const char* filename = "./../../../Parameters/conv_weights_19.bin";
 
     // Define the kernel tensor
     struct tensor* kernels;
@@ -160,10 +163,19 @@ void test_convolution_with_weights() {
         fprintf(stderr, "Conv2dWithCuda failed!");
     }
 
-    // Check the results
-    for (int i = 0; i < 10; i++) {
-        printf("%f\n", output_tensor.data[i]);
+    float max = FLT_MIN;
+    float min = FLT_MAX;
+    for (int i = 0; i < 28 * 28 * 128; i++) {
+        if (output_tensor.data[i] > max) {
+            max = output_tensor.data[i];
+        }
+        if (output_tensor.data[i] < min) {
+            min = output_tensor.data[i];
+        }
     }
+    printf("Output layer 1:\n");
+    printf("Max value: %f\n", max);
+    printf("Min value: %f\n", min);
     
     // Free the image tensor memory
     free_tensor(&img_tensor);
@@ -524,19 +536,6 @@ void test_batch_normalization() {
     free_tensor(&output_tensor);
 }
 
-void test_read_image() {
-    struct tensor img_tensor;
-    const char* filename = "./../../../dog.jpg";
-
-    load_image_as_tensor(filename, &img_tensor);
-
-    // You can now use img_tensor
-    printf("Image loaded: %dx%dx%d\n", img_tensor.row, img_tensor.col, img_tensor.depth);
-
-    // Free allocated memory
-    free_tensor(&img_tensor);
-}
-
 void test_read_conv_weights() {
     // File to read
     const char* filename = "./../../../Parameters/conv_weights_4.bin";
@@ -593,7 +592,7 @@ void test_read_linear() {
 
 void test_read_batch_normalization() {
     // File to read
-    const char* filename = "./../../../Parameters/batch_beta_1.bin";
+    const char* filename = "./../../Parameters/batch_mean_46.bin";
 
     // Define the size of the kernel
     int size = 64;
@@ -613,13 +612,45 @@ void test_read_batch_normalization() {
     free(bias);
 }
 
+void test_read_image() {
+    // File to read
+    char* filename = "./../../../dog.bin";
+
+    // Read the image and store it in a tensor
+    struct tensor img_tensor;
+    img_tensor.row = 224;
+    img_tensor.col = 224;
+    img_tensor.depth = 3;
+    img_tensor.data = (float*)malloc(img_tensor.depth  * img_tensor.row  * img_tensor.col * sizeof(float));
+
+    load_image_as_tensor(filename, &img_tensor);
+
+    // Check the results
+    print_tensor(&img_tensor);
+
+    free_tensor(&img_tensor);
+}
+
 void classify_image() {
+
+    // Check the working directory
+    char cwd[1000];
+    if (GetCurrentDirectory(sizeof(cwd), cwd) != 0) {
+        printf("Current working dir: %s\n", cwd);
+    }
+    else {
+        printf("GetCurrentDirectory() error: %lu\n", GetLastError());
+    }
+
     printf("Classify image: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
     time_t stop;
     double elapsed_time;
+
+    // File to read
+    char* filename = "./../../../dog.bin";
 
     // Set the parameters
     int image_size = 224;
@@ -631,8 +662,9 @@ void classify_image() {
     img_tensor.row = image_size;
     img_tensor.col = image_size;
     img_tensor.depth = num_channels;
-    img_tensor.data = (float*)malloc(img_tensor.row * img_tensor.col * img_tensor.depth * sizeof(float));
-    init_random_tensor(&img_tensor);
+    img_tensor.data = (float*)malloc(img_tensor.depth * img_tensor.row * img_tensor.col * sizeof(float));
+
+    load_image_as_tensor(filename, &img_tensor);
 
     // GPU CONVOLUTION
     // Declare the structure to store the output of the convolution with GPU
@@ -651,17 +683,59 @@ void classify_image() {
         fprintf(stderr, "ResNetWithCuda failed!");
     }
 
-    /*
+    // Read the classes
+    filename = "./../../../imagenet_classes.txt";
+
+    // Read the file into an array of strings
+    char** classes = load_classes(filename, num_classes);
+    if (classes == NULL) {
+        exit(-1);
+    }
+
     // Check the results
-    printf("Logit:");
+    // Array to store the top 5 values and their indices
+    int top = 5;
+    float* topValues = (float*)malloc(top * sizeof(float));
+    int* topIndices = (int*)malloc(top * sizeof(int));
+
+    // Initialize the top values to the lowest possible float
+    for (int i = 0; i < top; i++) {
+        topValues[i] = -FLT_MAX;
+        topIndices[i] = -1;
+    }
+
+    // Find the top 5 values and their indices
     for (int i = 0; i < num_classes; i++) {
-        if (output_classes[i] != 0.0) {
-            printf("Class: %d\tLogit:%f\n", i, output_classes[i]);
+        for (int j = 0; j < top; j++) {
+            if (output_classes[i] > topValues[j]) {
+                // Shift the current values down
+                for (int k = (top - 1); k > j; k--) {
+                    topValues[k] = topValues[k - 1];
+                    topIndices[k] = topIndices[k - 1];
+                }
+                // Insert the new value
+                topValues[j] = output_classes[i];
+                topIndices[j] = i;
+                break;
+            }
         }
     }
-    */
+
+    // Print the top 5 values and their indices
+    printf("Top 5 values and their indices:\n");
+    for (int i = 0; i < top; i++) {
+        if (topIndices[i] != -1) {
+            printf("Class: %s\tValue:%f\n", classes[topIndices[i]], topValues[i]);
+        }
+    }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
     free(output_classes);
+
+    // Free the classes memory
+    for (int i = 0; i < num_classes; i++) {
+        free(classes[i]);  // Free the memory for each string
+    }
+    free(classes);  // Free the array of pointers
 }

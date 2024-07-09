@@ -1,6 +1,5 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
 #include <stdio.h>
 #include <stdlib.h>
 #include "tensor_utils.cuh"
