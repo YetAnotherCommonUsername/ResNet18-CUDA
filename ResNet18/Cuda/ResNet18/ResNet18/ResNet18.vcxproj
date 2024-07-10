@@ -96,14 +96,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="bin_utils.cu" />
-    <CudaCompile Include="jpg_utils.cu" />
     <CudaCompile Include="model_utils.cu" />
     <CudaCompile Include="kernel.cu" />
     <CudaCompile Include="tensor_utils.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bin_utils.cuh" />
-    <ClInclude Include="jpg_utils.cuh" />
     <ClInclude Include="model_utils.cuh" />
     <ClInclude Include="tensor_utils.cuh" />
   </ItemGroup>
