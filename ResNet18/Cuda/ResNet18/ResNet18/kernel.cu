@@ -22,15 +22,15 @@ void test_read_conv_weights();
 void test_read_linear();
 void test_read_batch_normalization();
 void test_read_image();
-void classify_image_parallel();
+void classify_image();
 
 int main() {
-    classify_image_parallel();  // Change this to switch the entry point
+    classify_image();  // Change this to switch the entry point
     return 0;
 }
 
 void test_convolution() {
-    printf("Test Conv2dWithCuda: \n\n");
+    printf("Test convolution: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -77,20 +77,37 @@ void test_convolution() {
         print_tensor(&kernels[i]);
     }
 
-    // GPU CONVOLUTION
-    // Declare the structure to store the output of the convolution with GPU
-    struct tensor output_tensor;
-    output_tensor.col = (img_tensor.col + stride - 1) / stride;
-    output_tensor.row = (img_tensor.row + stride - 1) / stride;
-    output_tensor.depth = num_filters;
-    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    // Convolution in serial    
+    struct tensor output_tensor_serial;
+    output_tensor_serial.col = (img_tensor.col + stride - 1) / stride;
+    output_tensor_serial.row = (img_tensor.row + stride - 1) / stride;
+    output_tensor_serial.depth = num_filters;
+    output_tensor_serial.data = (float*)malloc(output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
 
     // Fill the output data with zeros
-    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    memset(output_tensor_serial.data, 0, output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
+
+    start = clock();
+    // Perform convolution in serial
+    convolution_serial(&img_tensor, kernels, num_filters, stride, &output_tensor_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in serial takes: %lf [s]\n", elapsed_time);
+
+    // Convolution in parallel
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor_parallel;
+    output_tensor_parallel.col = (img_tensor.col + stride - 1) / stride;
+    output_tensor_parallel.row = (img_tensor.row + stride - 1) / stride;
+    output_tensor_parallel.depth = num_filters;
+    output_tensor_parallel.data = (float*)malloc(output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor_parallel.data, 0, output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = Conv2dWithCuda(&img_tensor, kernels, kernel_size, stride, num_filters, &output_tensor);
+    cudaError_t cudaStatus = Conv2dWithCuda(&img_tensor, kernels, kernel_size, stride, num_filters, &output_tensor_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
@@ -99,14 +116,28 @@ void test_convolution() {
     }
 
     // Check the results
-    print_tensor(&output_tensor);
+    bool correct = true;
+    int num_output_data = output_tensor_parallel.depth * output_tensor_parallel.row * output_tensor_parallel.col;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_tensor_parallel.data[i] != output_tensor_serial.data[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");      
+    }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
     for (int i = 0; i < num_filters; i++) {
         free_tensor(&kernels[i]);
     }
-    free_tensor(&output_tensor);
+    free_tensor(&output_tensor_serial);
+    free_tensor(&output_tensor_parallel);
 }
 
 void test_convolution_with_weights() {
@@ -186,7 +217,7 @@ void test_convolution_with_weights() {
 }
 
 void test_max_pooling() {
-    printf("Test MaxPoolingWithCuda: \n\n");
+    printf("Test max pooling: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -211,20 +242,38 @@ void test_max_pooling() {
     printf("Image tensor:\n");
     print_tensor(&img_tensor);
 
-    // GPU CONVOLUTION
+    // Max Pooling in serial
     // Declare the structure to store the output of the convolution with GPU
-    struct tensor output_tensor;
-    output_tensor.col = (img_tensor.col + stride - 1) / stride;
-    output_tensor.row = (img_tensor.row + stride - 1) / stride;
-    output_tensor.depth = img_tensor.depth;
-    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    struct tensor output_tensor_serial;
+    output_tensor_serial.col = (img_tensor.col + stride - 1) / stride;
+    output_tensor_serial.row = (img_tensor.row + stride - 1) / stride;
+    output_tensor_serial.depth = img_tensor.depth;
+    output_tensor_serial.data = (float*)malloc(output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
 
     // Fill the output data with zeros
-    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    memset(output_tensor_serial.data, 0, output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    max_pooling_serial(&img_tensor, pool_size, stride, &output_tensor_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in serial takes: %lf [s]\n", elapsed_time);
+
+    // Max Pooling in parallel
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor_parallel;
+    output_tensor_parallel.col = (img_tensor.col + stride - 1) / stride;
+    output_tensor_parallel.row = (img_tensor.row + stride - 1) / stride;
+    output_tensor_parallel.depth = img_tensor.depth;
+    output_tensor_parallel.data = (float*)malloc(output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor_parallel.data, 0, output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = MaxPoolingWithCuda(&img_tensor, pool_size, stride, &output_tensor);
+    cudaError_t cudaStatus = MaxPoolingWithCuda(&img_tensor, pool_size, stride, &output_tensor_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
@@ -233,15 +282,29 @@ void test_max_pooling() {
     }
 
     // Check the results
-    print_tensor(&output_tensor);
+    bool correct = true;
+    int num_output_data = output_tensor_parallel.depth * output_tensor_parallel.row * output_tensor_parallel.col;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_tensor_parallel.data[i] != output_tensor_serial.data[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
+    }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free_tensor(&output_tensor);
+    free_tensor(&output_tensor_serial);
+    free_tensor(&output_tensor_parallel);
 }
 
 void test_average_pooling() {
-    printf("Test AveragePoolingWithCuda: \n\n");
+    printf("Test average pooling: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -264,32 +327,55 @@ void test_average_pooling() {
     printf("Image tensor:\n");
     print_tensor(&img_tensor);
 
-    // GPU CONVOLUTION
+    // Average Pooling in serial
+   // Declare the structure to store the output of the convolution with GPU
+    float* output_array_serial = (float*)malloc(num_channels * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    average_pooling_serial(&img_tensor, output_array_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Average pooling in serial takes: %lf [s]\n", elapsed_time);
+
+    // Average Pooling in parallel
     // Declare the structure to store the output of the convolution with GPU
-    float* output_array = (float*)malloc(num_channels * sizeof(float));
+    float* output_array_parallel = (float*)malloc(num_channels * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = AveragePoolingWithCuda(&img_tensor, output_array);
+    cudaError_t cudaStatus = AveragePoolingWithCuda(&img_tensor, output_array_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
-    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
+    printf("Average pooling in parallel takes: %lf [s]\n", elapsed_time);
     if (cudaStatus != cudaSuccess) {
         fprintf(stderr, "AveragePoolingWithCuda failed!");
     }
 
     // Check the results
-    for (int i = 0; i < num_channels; i++) {
-        printf("%f\n", output_array[i]);
+    bool correct = true;
+    int num_output_data = img_tensor.depth;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_array_parallel[i] != output_array_serial[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
     }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free(output_array);
+    free(output_array_serial);
+    free(output_array_parallel);
 }
 
 void test_residual_connection() {
-    printf("Test ResidualConnectionWithCuda: \n\n");
+    printf("Test residual connection: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -320,20 +406,38 @@ void test_residual_connection() {
     printf("Image tensor:\n");
     print_tensor(&img_tensor1);
 
-    // GPU CONVOLUTION
+    // Residual connection in serial
     // Declare the structure to store the output of the convolution with GPU
-    struct tensor output_tensor;
-    output_tensor.col = image_size;
-    output_tensor.row = image_size;
-    output_tensor.depth = num_channels;
-    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    struct tensor output_tensor_serial;
+    output_tensor_serial.col = image_size;
+    output_tensor_serial.row = image_size;
+    output_tensor_serial.depth = num_channels;
+    output_tensor_serial.data = (float*)malloc(output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
 
     // Fill the output data with zeros
-    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    memset(output_tensor_serial.data, 0, output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    add_tensors_serial(&img_tensor1, &img_tensor2, &output_tensor_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Residual connection in serial takes: %lf [s]\n", elapsed_time);
+
+    // Residual connection in parallel
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor_parallel;
+    output_tensor_parallel.col = image_size;
+    output_tensor_parallel.row = image_size;
+    output_tensor_parallel.depth = num_channels;
+    output_tensor_parallel.data = (float*)malloc(output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor_parallel.data, 0, output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = ResidualConnectionWithCuda(&img_tensor1, &img_tensor2, &output_tensor);
+    cudaError_t cudaStatus = ResidualConnectionWithCuda(&img_tensor1, &img_tensor2, &output_tensor_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Residual connection in parallel takes: %lf [s]\n", elapsed_time);
@@ -342,16 +446,30 @@ void test_residual_connection() {
     }
 
     // Check the results
-    print_tensor(&output_tensor);
+    bool correct = true;
+    int num_output_data = output_tensor_parallel.depth * output_tensor_parallel.row * output_tensor_parallel.col;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_tensor_parallel.data[i] != output_tensor_serial.data[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
+    }
 
     // Free the image tensor memory
     free_tensor(&img_tensor1);
     free_tensor(&img_tensor2);
-    free_tensor(&output_tensor);
+    free_tensor(&output_tensor_serial);
+    free_tensor(&output_tensor_parallel);
 }
 
 void test_fully_connected() {
-    printf("Test FullyConnectedWithCuda: \n\n");
+    printf("Test fully connected layer: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -393,13 +511,24 @@ void test_fully_connected() {
         bias[i] = 1.0;
     }
 
-    // GPU CONVOLUTION
+    // Fully connected in serial
+   // Declare the structure to store the output of the convolution with GPU
+    float* output_array_serial = (float*)malloc(num_classes * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    fully_connected_serial(input_array, weights, bias, array_size, num_classes, output_array_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Average pooling in serial takes: %lf [s]\n", elapsed_time);
+
+    // Fully connected in parallel
     // Declare the structure to store the output of the convolution with GPU
-    float* output_array = (float*)malloc(num_classes * sizeof(float));
+    float* output_array_parallel = (float*)malloc(num_classes * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = FullyConnectedLayerWithCuda(input_array, weights, bias, array_size, num_classes, output_array);
+    cudaError_t cudaStatus = FullyConnectedLayerWithCuda(input_array, weights, bias, array_size, num_classes, output_array_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Fully connected layer in parallel takes: %lf [s]\n", elapsed_time);
@@ -408,19 +537,30 @@ void test_fully_connected() {
     }
 
     // Check the results
-    for (int i = 0; i < 10; i++) {
-        printf("%f\n", output_array[i]);
+    bool correct = true;
+    for (int i = 0; i < num_classes; i++) {
+        if (output_array_parallel[i] != output_array_serial[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
     }
 
     // Free the memory
     free(input_array);
     free(weights);
     free(bias);
-    free(output_array);
+    free(output_array_serial);
+    free(output_array_parallel);
 }
 
 void test_relu() {
-    printf("Test ReLUWithCuda: \n\n");
+    printf("Test ReLU: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -443,20 +583,38 @@ void test_relu() {
     printf("Image tensor:\n");
     print_tensor(&img_tensor);
 
-    // GPU CONVOLUTION
+    // Residual connection in serial
     // Declare the structure to store the output of the convolution with GPU
-    struct tensor output_tensor;
-    output_tensor.col = image_size;
-    output_tensor.row = image_size;
-    output_tensor.depth = num_channels;
-    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    struct tensor output_tensor_serial;
+    output_tensor_serial.col = image_size;
+    output_tensor_serial.row = image_size;
+    output_tensor_serial.depth = num_channels;
+    output_tensor_serial.data = (float*)malloc(output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
 
     // Fill the output data with zeros
-    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    memset(output_tensor_serial.data, 0, output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    relu_serial(&img_tensor, &output_tensor_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("ReLU in serial takes: %lf [s]\n", elapsed_time);
+
+    // ReLU in parallel
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor_parallel;
+    output_tensor_parallel.col = image_size;
+    output_tensor_parallel.row = image_size;
+    output_tensor_parallel.depth = num_channels;
+    output_tensor_parallel.data = (float*)malloc(output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor_parallel.data, 0, output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = ReLUWithCuda(&img_tensor, &output_tensor);
+    cudaError_t cudaStatus = ReLUWithCuda(&img_tensor, &output_tensor_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("ReLU in parallel takes: %lf [s]\n", elapsed_time);
@@ -465,15 +623,28 @@ void test_relu() {
     }
 
     // Check the results
-    print_tensor(&output_tensor);
+    bool correct = true;
+    int num_output_data = output_tensor_parallel.depth * output_tensor_parallel.row * output_tensor_parallel.col;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_tensor_parallel.data[i] != output_tensor_serial.data[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
+    }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free_tensor(&output_tensor);
+    free_tensor(&output_tensor_parallel);
 }
 
 void test_batch_normalization() {
-    printf("Test BatchNormalizationWithCuda: \n\n");
+    printf("Test batch normalization: \n\n");
 
     // Variabiles to store the clock cicles used to mesure the execution time
     time_t start;
@@ -504,20 +675,38 @@ void test_batch_normalization() {
     conv1_batch1_std = (float*)malloc(num_filters * sizeof(float));
     load_array("./../../../Parameters/batch_std_8.bin", conv1_batch1_std, num_filters);
 
-    // GPU CONVOLUTION
+    // Batch normalization in serial
     // Declare the structure to store the output of the convolution with GPU
-    struct tensor output_tensor;
-    output_tensor.col = image_size;
-    output_tensor.row = image_size;
-    output_tensor.depth = num_channels;
-    output_tensor.data = (float*)malloc(output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    struct tensor output_tensor_serial;
+    output_tensor_serial.col = image_size;
+    output_tensor_serial.row = image_size;
+    output_tensor_serial.depth = num_channels;
+    output_tensor_serial.data = (float*)malloc(output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
 
     // Fill the output data with zeros
-    memset(output_tensor.data, 0, output_tensor.row * output_tensor.col * output_tensor.depth * sizeof(float));
+    memset(output_tensor_serial.data, 0, output_tensor_serial.row * output_tensor_serial.col * output_tensor_serial.depth * sizeof(float));
+
+    start = clock();
+    // Perform max pooling in serial
+    batch_normalization_serial(&img_tensor, conv1_batch1_beta, conv1_batch1_gamma, conv1_batch1_mean, conv1_batch1_std, &output_tensor_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Batch normalization in serial takes: %lf [s]\n", elapsed_time);
+
+    // Batch normalization in parallel
+    // Declare the structure to store the output of the convolution with GPU
+    struct tensor output_tensor_parallel;
+    output_tensor_parallel.col = image_size;
+    output_tensor_parallel.row = image_size;
+    output_tensor_parallel.depth = num_channels;
+    output_tensor_parallel.data = (float*)malloc(output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
+
+    // Fill the output data with zeros
+    memset(output_tensor_parallel.data, 0, output_tensor_parallel.row * output_tensor_parallel.col * output_tensor_parallel.depth * sizeof(float));
 
     start = clock();
     // Perform convolution using GPU
-    cudaError_t cudaStatus = BatchNormalizationWithCuda(&img_tensor, conv1_batch1_beta, conv1_batch1_gamma, conv1_batch1_mean, conv1_batch1_std, &output_tensor);
+    cudaError_t cudaStatus = BatchNormalizationWithCuda(&img_tensor, conv1_batch1_beta, conv1_batch1_gamma, conv1_batch1_mean, conv1_batch1_std, &output_tensor_parallel);
     stop = clock();
     elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
     printf("Batch normalization in parallel takes: %lf [s]\n", elapsed_time);
@@ -526,14 +715,24 @@ void test_batch_normalization() {
     }
 
     // Check the results
-    int n = 10;
-    for (int i = 0; i < n; i++) {
-        printf("%f\n", output_tensor.data[i]);
+    bool correct = true;
+    int num_output_data = output_tensor_parallel.depth * output_tensor_parallel.row * output_tensor_parallel.col;
+    for (int i = 0; i < num_output_data; i++) {
+        if (output_tensor_parallel.data[i] != output_tensor_serial.data[i]) {
+            correct = false;
+        }
+    }
+
+    if (correct) {
+        printf("Parallelizzation COMPLETE succesfully!\n");
+    }
+    else {
+        printf("Matrices are NOT equal!\n");
     }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free_tensor(&output_tensor);
+    free_tensor(&output_tensor_parallel);
 }
 
 void test_read_conv_weights() {
@@ -631,7 +830,7 @@ void test_read_image() {
     free_tensor(&img_tensor);
 }
 
-void classify_image_parallel() {
+void classify_image() {
 
     // Check the working directory
     char cwd[1000];
@@ -669,23 +868,6 @@ void classify_image_parallel() {
     printf("Image read succesfully\n");
     printf("Image size: %d, %d, %d\n", img_tensor.depth, img_tensor.row, img_tensor.col);
 
-    // ResNet (GPU)
-    // Declare the structure to store the output of the convolution with GPU
-    float* output_classes;
-    output_classes = (float*)malloc(num_classes * sizeof(float));
-
-    memset(output_classes, 0, num_classes * sizeof(float));
-
-    start = clock();
-    // Perform ResNet18 using GPU
-    cudaError_t cudaStatus = ResNetWithCuda(&img_tensor, output_classes);
-    stop = clock();
-    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
-    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "ResNetWithCuda failed!");
-    }
-
     // Read the classes
     filename = "./../../../imagenet_classes.txt";
 
@@ -694,46 +876,116 @@ void classify_image_parallel() {
         exit(-1);
     }
 
+    // ResNet in serial
+    // Declare the structure to store the output of the convolution with GPU
+    float* output_classes_serial;
+    output_classes_serial = (float*)malloc(num_classes * sizeof(float));
+
+    memset(output_classes_serial, 0, num_classes * sizeof(float));
+
+    start = clock();
+    // Perform ResNet18 in serial
+    ResNet_serial(&img_tensor, output_classes_serial);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in serial takes: %lf [s]\n", elapsed_time);
+
     // Check the results
     // Array to store the top 5 values and their indices
     int top = 5;
-    float* top_prob = (float*)malloc(top * sizeof(float));
-    int* top_idx = (int*)malloc(top * sizeof(int));
+    float* top_prob_serial = (float*)malloc(top * sizeof(float));
+    int* top_idx_serial = (int*)malloc(top * sizeof(int));
 
     // Initialize the top values to the lowest possible float
     for (int i = 0; i < top; i++) {
-        top_prob[i] = -FLT_MAX;
-        top_idx[i] = -1;
+        top_prob_serial[i] = -FLT_MAX;
+        top_idx_serial[i] = -1;
     }
 
     // Find the top 5 values and their indices
     for (int i = 0; i < num_classes; i++) {
         for (int j = 0; j < top; j++) {
-            if (output_classes[i] > top_prob[j]) {
+            if (output_classes_serial[i] > top_prob_serial[j]) {
                 // Shift the current values down
                 for (int k = (top - 1); k > j; k--) {
-                    top_prob[k] = top_prob[k - 1];
-                    top_idx[k] = top_idx[k - 1];
+                    top_prob_serial[k] = top_prob_serial[k - 1];
+                    top_idx_serial[k] = top_idx_serial[k - 1];
                 }
                 // Insert the new value
-                top_prob[j] = output_classes[i];
-                top_idx[j] = i;
+                top_prob_serial[j] = output_classes_serial[i];
+                top_idx_serial[j] = i;
                 break;
             }
         }
     }
 
     // Print the top 5 values and their indices
-    printf("Top 5 values and their indices:\n");
+    printf("Top 5 classes and their probabilities:\n");
     for (int i = 0; i < top; i++) {
-        if (top_idx[i] != -1) {
-            printf("Class: %s\tValue:%f\n", classes[top_idx[i]], top_prob[i]);
+        if (top_idx_serial[i] != -1) {
+            printf("Class: %s\tValue:%f\n", classes[top_idx_serial[i]], top_prob_serial[i]);
+        }
+    }
+
+    printf("\n");
+
+    // ResNet (GPU)
+    // Declare the structure to store the output of the convolution with GPU
+    float* output_classes_parallel;
+    output_classes_parallel = (float*)malloc(num_classes * sizeof(float));
+
+    memset(output_classes_parallel, 0, num_classes * sizeof(float));
+
+    start = clock();
+    // Perform ResNet18 using GPU
+    cudaError_t cudaStatus = ResNetWithCuda(&img_tensor, output_classes_parallel);
+    stop = clock();
+    elapsed_time = ((double)stop - start) / CLOCKS_PER_SEC;
+    printf("Convolution in parallel takes: %lf [s]\n", elapsed_time);
+    if (cudaStatus != cudaSuccess) {
+        fprintf(stderr, "ResNetWithCuda failed!");
+    }
+
+    // Check the results
+    // Array to store the top 5 values and their indices
+    float* top_prob_parallel = (float*)malloc(top * sizeof(float));
+    int* top_idx_parallel = (int*)malloc(top * sizeof(int));
+
+    // Initialize the top values to the lowest possible float
+    for (int i = 0; i < top; i++) {
+        top_prob_parallel[i] = -FLT_MAX;
+        top_idx_parallel[i] = -1;
+    }
+
+    // Find the top 5 values and their indices
+    for (int i = 0; i < num_classes; i++) {
+        for (int j = 0; j < top; j++) {
+            if (output_classes_parallel[i] > top_prob_parallel[j]) {
+                // Shift the current values down
+                for (int k = (top - 1); k > j; k--) {
+                    top_prob_parallel[k] = top_prob_parallel[k - 1];
+                    top_idx_parallel[k] = top_idx_parallel[k - 1];
+                }
+                // Insert the new value
+                top_prob_parallel[j] = output_classes_parallel[i];
+                top_idx_parallel[j] = i;
+                break;
+            }
+        }
+    }
+
+    // Print the top 5 values and their indices
+    printf("Top 5 classes and their probabilities:\n");
+    for (int i = 0; i < top; i++) {
+        if (top_idx_parallel[i] != -1) {
+            printf("Class: %s\tValue:%f\n", classes[top_idx_parallel[i]], top_prob_parallel[i]);
         }
     }
 
     // Free the image tensor memory
     free_tensor(&img_tensor);
-    free(output_classes);
+    free(output_classes_serial);
+    free(output_classes_parallel);
 
     // Free the classes memory
     for (int i = 0; i < num_classes; i++) {

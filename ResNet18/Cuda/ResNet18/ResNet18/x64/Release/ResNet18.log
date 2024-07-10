@@ -1,56 +1,85 @@
-﻿  Compiling CUDA source file kernel.cu...
+﻿  Compiling CUDA source file jpg_utils.cu...
   Compiling CUDA source file model_utils.cu...
-  Compiling CUDA source file jpg_utils.cu...
+  Compiling CUDA source file kernel.cu...
   Compiling CUDA source file tensor_utils.cu...
   Compiling CUDA source file bin_utils.cu...
   
+  
+  
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\model_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu" 
-  
-  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\bin_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu" 
-  
-  
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\jpg_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\jpg_utils.cu" 
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\kernel.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu" 
   
   C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\tensor_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\tensor_utils.cu" 
-  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\kernel.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu" 
+  
+  C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30133\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.4\include"     --keep-dir x64\Release  -maxrregcount=0   --machine 64 --compile -cudart static    -DWIN32 -DWIN64 -DNDEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /O2 /FS   /MD " -Xcompiler "/Fdx64\Release\vc142.pdb" -o "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\x64\Release\bin_utils.cu.obj" "C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\bin_utils.cu" 
   jpg_utils.cu
-  bin_utils.cu
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(703): warning #177-D: variable "val" was declared but never referenced
+    	float val;
+    	      ^
+  
+  Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(773): warning #177-D: variable "debug" was declared but never referenced
+    	bool debug = false;
+    	     ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(774): warning #177-D: variable "debug_data" was declared but never referenced
+    	float* debug_data;
+    	       ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(775): warning #177-D: variable "memsize_debug" was declared but never referenced
+    	int memsize_debug;
+    	    ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(1084): warning #177-D: variable "num_channel" was declared but never referenced
+    	int num_channel = input_tensor->depth;
+    	    ^
+  
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(1102): warning #550-D: variable "layer1_output_data3" was set but never used
+    	struct tensor layer1_output_data3;
+    	              ^
+  
   tensor_utils.cu
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(617): warning #2464-D: conversion from a string literal to "char *" is deprecated
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(816): warning #2464-D: conversion from a string literal to "char *" is deprecated
         char* filename = "./../../../dog.bin";
                          ^
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(653): warning #2464-D: conversion from a string literal to "char *" is deprecated
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(852): warning #2464-D: conversion from a string literal to "char *" is deprecated
         char* filename = "./../../../dog.bin";
                          ^
   
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(690): warning #2464-D: conversion from a string literal to "char *" is deprecated
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(872): warning #2464-D: conversion from a string literal to "char *" is deprecated
         filename = "./../../../imagenet_classes.txt";
                  ^
   
-  tmpxft_00001bf0_00000000-7_jpg_utils.cudafe1.cpp
-  tmpxft_00002ca8_00000000-7_bin_utils.cudafe1.cpp
-  tmpxft_00004b08_00000000-7_tensor_utils.cudafe1.cpp
+  bin_utils.cu
+  tmpxft_00006178_00000000-7_jpg_utils.cudafe1.cpp
+  tmpxft_00002f00_00000000-7_tensor_utils.cudafe1.cpp
   model_utils.cu
-  tmpxft_00004cb4_00000000-7_model_utils.cudafe1.cpp
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(617): warning #2464-D: conversion from a string literal to "char *" is deprecated
+  tmpxft_00002284_00000000-7_bin_utils.cudafe1.cpp
+  tmpxft_00001e58_00000000-7_model_utils.cudafe1.cpp
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(703): warning C4101: 'val': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(774): warning C4101: 'debug_data': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\model_utils.cu(775): warning C4101: 'memsize_debug': variabile locale senza riferimenti
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(816): warning #2464-D: conversion from a string literal to "char *" is deprecated
         char* filename = "./../../../dog.bin";
                          ^
   
   Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
   
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(653): warning #2464-D: conversion from a string literal to "char *" is deprecated
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(852): warning #2464-D: conversion from a string literal to "char *" is deprecated
         char* filename = "./../../../dog.bin";
                          ^
   
-C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(690): warning #2464-D: conversion from a string literal to "char *" is deprecated
+C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\ResNet18\kernel.cu(872): warning #2464-D: conversion from a string literal to "char *" is deprecated
         filename = "./../../../imagenet_classes.txt";
                  ^
   
   kernel.cu
-  tmpxft_00005444_00000000-7_kernel.cudafe1.cpp
+  tmpxft_000026a8_00000000-7_kernel.cudafe1.cpp
      Creazione della libreria C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Release\ResNet18.lib e dell'oggetto C:\Users\Aula D6\Desktop\Marzio\ProjectCuda\ResNet18\Cuda\ResNet18\x64\Release\ResNet18.exp
 LINK : warning LNK4098: la libreria predefinita 'LIBCMT' è in conflitto con l'utilizzo di altre librerie; usare /NODEFAULTLIB:libreria
   LINK : è stata specificata l'opzione /LTCG ma non è richiesta la generazione del codice; rimuovere /LTCG dalla riga di comando del collegamento per migliorare le prestazioni del linker
